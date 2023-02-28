@@ -6,7 +6,8 @@ Well, now you can!
 
 # Amalgamation
 _the action, process, or result of combining or uniting_
-<br><br>
+<br>
+<br>
 
 Yeah, that's what happened here.
 
@@ -16,7 +17,7 @@ The compiler is able to convert any MarkDown left in the source into its HTML re
 
 The thing™ also compiles Pug into HTML, with a few added features and a few removed features (most notably no variables or pipes, but support for reusable components)! The Pug compiler is also a subset of the [accepted Pug spec](https://pugjs.org/language/attributes.html).
 
-Finally, any TypeScript found in script tags is compiled into plain JavaScript. This is not a subset, as I'd rather die than write [my own TypeScript compiler](./tscompiler.pug).
+Finally, any TypeScript found in script tags is compiled into plain JavaScript. This is not a subset, as I'd rather die than write my own TypeScript compiler.
 
 <br>
 <br>
