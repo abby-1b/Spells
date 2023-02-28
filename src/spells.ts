@@ -1,28 +1,29 @@
 import { startServer } from "./server.ts"
 import { compile } from "./compile.ts"
-import { logColor } from "./logging.ts"
+import { logStyle, warning } from "./logging.ts"
 
-const HELP_STRING = `
-Spells: An amalgamation
+/** The compiler version, which changes when there's any API breaking changes. */
+const VERSION = "0.0"
 
-THINGS:
-
-	help, h
-		Shows this dialogue
-
-	server, serve, s
-		Starts a server, accepting an optional argument for the port.
-		The default port is :8080
-
-	build, b
-		Builds the app 
-`.replace(/\t/g, "    ")
+const COMMANDS: { [key: string]: string[] } = {
+	"help, h": [ "Shows this dialogue" ],
+	"server, serve, s  [port]": [
+		"Starts a server, accepting an optional argument for the port.",
+		"The default port is :8080"
+	],
+	"build, b": [ "Builds the app" ]
+}
 
 const args = (Deno.args ?? []).map(a => a.replace(/^-{1,}/g, ""))
 
 if (args.length == 0 || args[0][0] == "h") {
 	// Help
-	console.log(HELP_STRING)
+	logStyle("font-weight: bold", "Spells v" + VERSION)
+	console.log("\nCommands:")
+	for (const c in COMMANDS) {
+		logStyle("color: blue; font-weight: bold", "    " + c)
+		logStyle("", "        " + COMMANDS[c].join("\n        ") + "\n")
+	}
 	Deno.exit()
 } else if (args[0][0] == "s") {
 	// Server
@@ -30,6 +31,8 @@ if (args.length == 0 || args[0][0] == "h") {
 	startServer(port)
 } else if (args[0][0] == "b") {
 	// Build
+	if (args.length == 1)
+		warning("No file provided, defaulting to index.pug")
 	const files: string[] = 
 		args.length > 1
 			? args.slice(1)

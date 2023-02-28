@@ -22,14 +22,27 @@ export function errorNoExit(...args: any[]) {
 /** Logs a warning to the console (in yellow). Doesn't exit the program. */
 export function warning(...args: any[]) {
 	console.log(
-		"%c" + args.map(e => JSON.stringify(e)).join(" "),
+		"%c" + args.map(e =>
+			typeof e === "string" ? e : JSON.stringify(e)
+		).join(" "),
 		"color: yellow"
 	)
 }
 
 export function logColor(color: string, ...args: any[]) {
 	console.log(
-		"%c" + args.map(e => JSON.stringify(e)).join(" "),
+		"%c" + args.map(e =>
+			typeof e === "string" ? e : JSON.stringify(e)
+		).join(" "),
 		"color: " + color
+	)
+}
+
+export function logStyle(style: string, ...args: any[]) {
+	console.log(
+		"%c" + args.map(e =>
+			typeof e === "string" ? e : JSON.stringify(e)
+		).join(" "),
+		style
 	)
 }
