@@ -1,0 +1,14 @@
+
+/* TEXT */
+.text-center {
+	text-align: center;
+}
+
+/* MARGIN */
+.top-margin {
+	margin-top: revert;
+}
+
+.no-margin {
+	margin: 0;
+}
