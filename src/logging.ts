@@ -8,6 +8,7 @@ export function error(...args: any[]) {
 	Deno.exit(1)
 }
 
+/** Logs an error to the console (in red) without exiting the program. */
 export function errorNoExit(...args: any[]) {
 	console.log(
 		"%c" + args.map(e =>
