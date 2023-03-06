@@ -205,8 +205,6 @@ function crawl(els: Element[], components: Record<string, Element>): string[] {
 			foundTSSources.push(...crawl(nel.children!, components))
 			els[e] = nel
 			continue
-
-			// TODO: repeatable components across a single file
 		} else if (el.tagName == "style") {
 			if (el.attrs && "src" in el.attrs) {
 				el.tagName = "link"
