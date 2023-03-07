@@ -1,0 +1,34 @@
+{
+	"name": "spl",
+	"displayName": "Spells",
+	"description": "An amalgamation",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.76.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "spl",
+				"aliases": [
+					"Spells",
+					"spl"
+				],
+				"extensions": [
+					".spl"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "spl",
+				"scopeName": "source.spl",
+				"path": "./syntaxes/spl.tmLanguage.json"
+			}
+		]
+	}
+}
