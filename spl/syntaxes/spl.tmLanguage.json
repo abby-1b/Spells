@@ -2,45 +2,22 @@
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Spells",
 	"patterns": [
-		{ "include": "#keywords" },
-		{ "include": "#attributes" },
-		{ "include": "#strings" },
-		{ "include": "#scripts" }
-	],
-	"repository": {
-		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.spl",
-				"match": "(^|\\n)( |\\t)*[a-zA-Z_-]+?\\b"
-			}]
-		},
-		"attributes": {
-			"patterns": [{
-				"name": "constant.language.spl",
-				"match": "\\(.*?(?=\\n)"
-			}]
-		},
-		"strings": {
-			"name": "string.quoted.double.spl",
-			"begin": "\"",
-			"end": "\"",
+		{
+			"name": "keyword.control.spl",
+			"begin": "^\\s*\\w+\\s*\\.\\s*$",
+			"end": "(?=^\\s*(?!\\w+\\s*\\.\\s*))",
 			"patterns": [
 				{
-					"name": "constant.character.escape.spl",
-					"match": "\\\\."
+					"name": "comment.block.spl",
+					"match": "^\\s+.*$"
 				}
 			]
 		},
-		"scripts": {
-			"begin": "script",
-			"end": "`",
-			"name": "source.ts",
-			"patterns": [
-				{
-					"include": "source.ts"
-				}
-			]
+		{
+			"name": "constant.language.spl",
+			"match": "^.*$"
 		}
-	},
+	],
+	"repository": {},
 	"scopeName": "source.spl"
 }
