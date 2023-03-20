@@ -20,7 +20,11 @@
 				"extensions": [
 					".spl"
 				],
-				"configuration": "./language-configuration.json"
+				"configuration": "./language-configuration.json",
+				"icon": {
+					"dark": "./iconDark.png",
+					"light": "./iconLight.png"
+				}
 			}
 		],
 		"grammars": [

@@ -3,20 +3,10 @@
 	"name": "Spells",
 	"patterns": [
 		{
-			"name": "keyword.control.spl",
-			"begin": "^\\s*\\w+\\s*\\.\\s*$",
-			"end": "(?=^\\s*(?!\\w+\\s*\\.\\s*))",
-			"patterns": [
-				{
-					"name": "comment.block.spl",
-					"match": "^\\s+.*$"
-				}
-			]
-		},
-		{
 			"name": "constant.language.spl",
-			"match": "^.*$"
-		}
+			"match": "^@[a-zA-Z_\\-]+[a-zA-Z_\\-0-9]*"
+		},
+		{ "include": "text.pug" }
 	],
 	"repository": {},
 	"scopeName": "source.spl"
