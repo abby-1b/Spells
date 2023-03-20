@@ -25,11 +25,11 @@ async function exists(f: string): Promise<boolean> {
 async function handleRequest(path: string): Promise<Response> {
 	let throw404 = false
 
-	// Default to `index.pug`, then check `index.html` and finally `send a directory.`
+	// Default to `indexsplpug`, then check `index.html` and finally `send a directory.`
 	if (!path.includes(".")) {
 		if (path.length > 0 && !path.endsWith("/")) path += "/"
 
-		if (await exists(path + "index.pug")) path += "index.pug"
+		if (await exists(path + "index.spl")) path += "index.spl"
 		else if (await exists(path + "index.html")) path += "index.html"
 		else if (await exists(path)) path += "[dir]"
 		else throw404 = true
@@ -68,8 +68,8 @@ async function handleRequest(path: string): Promise<Response> {
 		let file: Uint8Array | string = await Deno.readFile(path)
 		let sct = path.endsWith(".ts") ? "text/javascript" : contentType(extname(path)) ?? "text/plain"
 
-		if (path.endsWith(".pug")) {
-			// Replace .pug files with compiled HTML
+		if (path.endsWith("spl")) {
+			// Replace .spl files with compiled HTML
 			file = compile(new TextDecoder().decode(file))
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
@@ -82,6 +82,10 @@ async function handleRequest(path: string): Promise<Response> {
 		headers.set("Content-Type", sct)
 		return new Response(file, { headers })
 	} catch {
+		// Check if file exists as `.ts` instead of `.js`
+		if (path.endsWith(".js"))
+			return handleRequest(path.slice(0, -3) + ".ts")
+
 		console.log(" > 404")
 		return new Response("404: Not Found!", { status: 404 })
 	}

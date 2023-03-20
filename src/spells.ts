@@ -32,18 +32,18 @@ if (args.length == 0 || args[0][0] == "h") {
 } else if (args[0][0] == "b") {
 	// Build
 	if (args.length == 1)
-		warning("No file provided, defaulting to index.pug")
+		warning("No file provided, defaulting to index.spl")
 	const files: string[] = 
 		args.length > 1
 			? args.slice(1)
-			: ["index.pug"]
+			: ["index.spl"]
 	for (const f of files) {
-		if (!f.endsWith(".pug")) {
-			console.warn(`Can't compile non-.pug file: ${f}`)
+		if (!f.endsWith(".spl")) {
+			console.warn(`Can't compile non-.spl file: ${f}`)
 			continue
 		}
 		const code = Deno.readTextFileSync(f)
 		const compiled = compile(code)
-		Deno.writeTextFileSync(f.replace(/\.pug$/g, ".html"), compiled)
+		Deno.writeTextFileSync(f.replace(/\.spl$/g, ".html"), compiled)
 	}
 }
