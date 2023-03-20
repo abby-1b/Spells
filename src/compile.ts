@@ -1,15 +1,24 @@
 import { error, errorNoExit } from "./logging.ts"
 import { markDownToHtml } from "./mdc.ts"
 
+/**
+ * Basic CSS that gets added to every compiled file. \
+ * TODO: Optimize unused styles.
+ */
+const basicCSS = Deno.readTextFileSync(new URL(import.meta.url).pathname.split("/").slice(0, -1).join("/") + "/../css/basic.css")
+
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
-// off-chance that the user really wrote normal JavaScript, i'll take it.
+// off-chance that the user really wrote normal JavaScript, this'll work.
 export let transform = (source: string): string => source
 ;(async () => {
 	const innerTransform = (await import("https://deno.land/x/swc@0.2.1/mod.ts")).transform
 	transform = (source: string) =>
 		innerTransform(source, {
-			jsc: { parser: { syntax: "typescript", tsx: true } }
+			jsc: {
+				target: "es2022",
+				parser: { syntax: "typescript", tsx: true }
+			}
 		}).code
 })()
 
@@ -18,6 +27,14 @@ const noMarkDownTags = [
 	"style",
 	"css",
 	"script"
+]
+
+/** Tags that will be moved to the `head` tag */
+const headTags = [
+	"title",
+	"css",
+	"style",
+	"meta"
 ]
 
 /** A virtual element structure */
@@ -176,10 +193,20 @@ function gen(els: Element[], indent = 0): string {
  * declared). This function modifies the element structure in place.
  * @param els The element structure we're crawling through
  */
-function crawl(els: Element[], components: Record<string, Element>): string[] {
-	const foundTSSources: string[] = []
+function crawl(els: Element[], components: Record<string, Element>): {
+	tsSources: string[],
+	headElements: Element[]
+} {
+	const tsSources: string[] = []
+	const headElements: Element[] = []
 	for (let e = 0; e < els.length; e++) {
 		const el = els[e]
+		if (headTags.includes(el.tagName)) {
+			headElements.push(el)
+			els.splice(e--, 1)
+			continue
+		}
+		if (el.tagName == "css") el.tagName = "style"
 		if (el.attrs && "@" in el.attrs) {
 			// Is a component!
 			if (!(el.tagName in components)) {
@@ -202,7 +229,9 @@ function crawl(els: Element[], components: Record<string, Element>): string[] {
 				children: [...c.children ?? [], ...el.children ?? []],
 				singleTag: c.singleTag
 			}
-			foundTSSources.push(...crawl(nel.children!, components))
+			const crawlResults = crawl(nel.children!, components)
+			tsSources.push(...crawlResults.tsSources)
+			headElements.push(...crawlResults.headElements)
 			els[e] = nel
 			continue
 		} else if (el.tagName == "style") {
@@ -212,7 +241,7 @@ function crawl(els: Element[], components: Record<string, Element>): string[] {
 			}
 		} else if (el.tagName == "script") {
 			if (el.attrs && "src" in el.attrs) {
-				foundTSSources.push(el.attrs.src)
+				tsSources.push(el.attrs.src)
 			} else if (el.innerText) {
 				el.innerText = transform(el.innerText)
 			}
@@ -220,9 +249,16 @@ function crawl(els: Element[], components: Record<string, Element>): string[] {
 		// TODO: repeatable components across multiple files
 		// TODO: parse a few attributes into CSS
 
-		if (el.children) foundTSSources.push(...crawl(el.children, components))
+		if (el.children) {
+			const crawlResults = crawl(el.children, components)
+			tsSources.push(...crawlResults.tsSources)
+			headElements.push(...crawlResults.headElements)
+		}
 	}
-	return foundTSSources
+	return {
+		tsSources,
+		headElements
+	}
 }
 
 /**
@@ -232,11 +268,13 @@ function crawl(els: Element[], components: Record<string, Element>): string[] {
  * @param els The element structure we're modifying
  * @returns 
  */
+let headTag: Element
 function modify(els: Element[]) {
 	const hasTag = (el: Element, searchTag: string): boolean =>
 		el.children ? !!el.children.find(e => e.tagName == searchTag) : false
 
-	let htmlTag: Element, headTag: Element
+	let htmlTag: Element
+	headTag = undefined as unknown as Element
 	const topTags = els.map(e => e.tagName)
 	if (!topTags.includes("html")) {
 		// Add <html> around everything
@@ -249,16 +287,17 @@ function modify(els: Element[]) {
 		// Add <body> around everything after <head>
 		const headIdx = htmlTag.children!.findIndex(c => c.tagName == "head")
 		if (headIdx == -1) {
-			// Get the head element
+			// Make the head element
 			headTag = { tagName: "head", children: [] }
-			htmlTag.children?.unshift(headTag)
-		} else
+		} else {
+			// Get the head element
 			headTag = htmlTag.children![headIdx]
-		const bodyEls = htmlTag.children!.splice(headIdx + 1)
-		htmlTag.children!.push({
+			htmlTag.children!.splice(headIdx, 1)
+		}
+		htmlTag.children = [{
 			tagName: "body",
-			children: bodyEls
-		} as Element)
+			children: htmlTag.children!
+		} as Element]
 	} else {
 		// Just the head element
 		if (hasTag(htmlTag, "head"))
@@ -269,21 +308,31 @@ function modify(els: Element[]) {
 		}
 	}
 
+	// <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	headTag.children!.push({
+		tagName: "meta",
+		attrs: {name: '"viewport"', content: '"width=device-width,initial-scale=1.0"'}
+	})
 	headTag.children!.push({
 		tagName: "style",
-		innerText: Deno.readTextFileSync("./css/basic.css"),
+		innerText: basicCSS,
 		notMarkDown: true
 	} as Element)
 
-	const foundTSSources = crawl(els, {})
+	const crawlResults = crawl(els, {})
+	headTag.children!.push(...crawlResults.headElements)
+
+	htmlTag.children!.unshift(headTag)
+
 	// Add <!DOCTYPE html> at the beginning of the document
 	els.unshift({
 		tagName: "!DOCTYPE html",
 		singleTag: true
 	} as Element)
+
 	return {
 		els,
-		foundTSSources
+		foundTSSources: crawlResults.tsSources
 	}
 }
 
@@ -298,14 +347,16 @@ export function compile(code: string): string {
 		const { els } = modify(parsed)
 		return gen(els)
 	} catch (e) {
-		errorNoExit(e, false)
+		errorNoExit("Tried compiling:\n" + code)
+		console.log(e)
+		// errorNoExit(e, false)
 		return ""
 	}
 }
 
 // Run a simple test if the compile function is ran standalone.
 if (import.meta.main) {
-	const f = Deno.readTextFileSync("index.pug")
+	const f = Deno.readTextFileSync("index.spl")
 	const out = compile(f)
 	console.log(out)
 }
