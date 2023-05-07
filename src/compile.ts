@@ -5,7 +5,7 @@ import { markDownToHtml } from "./mdc.ts"
  * Basic CSS that gets added to every compiled file. \
  * TODO: Optimize unused styles.
  */
-const basicCSS = Deno.readTextFileSync(new URL(import.meta.url).pathname.split("/").slice(0, -1).join("/") + "/../css/basic.css")
+// const basicCSS = Deno.readTextFileSync(new URL(import.meta.url).pathname.split("/").slice(0, -1).join("/") + "/../css/basic.css")
 
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
@@ -313,11 +313,11 @@ function modify(els: Element[]) {
 		tagName: "meta",
 		attrs: {name: '"viewport"', content: '"width=device-width,initial-scale=1.0"'}
 	})
-	headTag.children!.push({
-		tagName: "style",
-		innerText: basicCSS,
-		notMarkDown: true
-	} as Element)
+	// headTag.children!.push({
+	// 	tagName: "style",
+	// 	innerText: basicCSS,
+	// 	notMarkDown: true
+	// } as Element)
 
 	const crawlResults = crawl(els, {})
 	headTag.children!.push(...crawlResults.headElements)
