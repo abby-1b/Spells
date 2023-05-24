@@ -10,10 +10,10 @@ import { markDownToHtml } from "./mdc.ts"
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
 // off-chance that the user really wrote normal JavaScript, this'll work.
-export let transform = (source: string): string => source
+export let compileTS = (source: string): string => source
 ;(async () => {
 	const innerTransform = (await import("https://deno.land/x/swc@0.2.1/mod.ts")).transform
-	transform = (source: string) =>
+	compileTS = (source: string) =>
 		innerTransform(source, {
 			jsc: {
 				target: "es2022",
@@ -243,7 +243,7 @@ function crawl(els: Element[], components: Record<string, Element>): {
 			if (el.attrs && "src" in el.attrs) {
 				tsSources.push(el.attrs.src)
 			} else if (el.innerText) {
-				el.innerText = transform(el.innerText)
+				el.innerText = compileTS(el.innerText)
 			}
 		}
 		// TODO: repeatable components across multiple files

@@ -1,6 +1,6 @@
 import { extname } from "https://deno.land/std@0.165.0/path/mod.ts"
 import { contentType } from "https://deno.land/std@0.177.0/media_types/mod.ts"
-import { compile, transform } from "./compile.ts"
+import { compile, compileTS } from "./compile.ts"
 
 
 /** Text to be served, which overrides file access. */
@@ -74,7 +74,7 @@ async function handleRequest(path: string): Promise<Response> {
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
 			// Replace .ts files with JavaScript
-			file = transform(new TextDecoder().decode(file))
+			file = compileTS(new TextDecoder().decode(file))
 		}
 
 		// Send the file over
