@@ -1,6 +1,6 @@
 import { extname } from "https://deno.land/std@0.165.0/path/mod.ts"
 import { contentType } from "https://deno.land/std@0.177.0/media_types/mod.ts"
-import { compile, compileTS } from "./compile.ts"
+import { compile, compileTS, startTSServer } from "./compile.ts"
 
 
 /** Text to be served, which overrides file access. */
@@ -21,22 +21,39 @@ async function exists(f: string): Promise<boolean> {
 	}
 }
 
+async function getData(f: string): Promise<Deno.FileInfo | undefined> {
+	try {
+		return await Deno.stat(f)
+	} catch {}
+}
+
 /** Handles a single request, which only uses the given path. */
-async function handleRequest(path: string): Promise<Response> {
+async function handleRequest(path: string, fullPath: string, silent?: boolean): Promise<Response> {
 	let throw404 = false
 
-	// Default to `indexsplpug`, then check `index.html` and finally `send a directory.`
-	if (!path.includes(".")) {
-		if (path.length > 0 && !path.endsWith("/")) path += "/"
+	// if (path.length == 0) {
+	// 	path = "/"
+	// }
 
+	// Default to `index.spl`, then check `index.html` and finally send a directory.
+	if (path.endsWith("/") || path.length == 0) {
+		// If the path is into a directory, then great!
 		if (await exists(path + "index.spl")) path += "index.spl"
 		else if (await exists(path + "index.html")) path += "index.html"
 		else if (await exists(path)) path += "[dir]"
 		else throw404 = true
+	} else {
+		// If it's not into a directory (directly)...
+		const data = await getData(path)
+		if (!data) {
+			throw404 = true
+		} else if (data.isDirectory) {
+			return Response.redirect(fullPath + "/", 302)
+		}
 	}
 
 	// Log
-	console.log(
+	if (!silent) console.log(
 		// The path that's being gotten
 		"/" + path + " ",
 
@@ -59,7 +76,7 @@ async function handleRequest(path: string): Promise<Response> {
 		const dir = path.slice(0, -6)
 		let ret = `<style>html{background-color:white;filter:invert(1)}*{font-family:monospace;margin-bottom:0}a{color:#0d4500}</style><h1 style="margin-top:20px">Directory Listing of ./${dir}</h1><br>\n`
 		for await (const f of Deno.readDir("./" + dir)) {
-			ret += `<a href="${dir + '/' + f.name}">${f.name}</a><br>\n`
+			ret += `<a href="${'./' + f.name}">${f.name}</a><br>\n`
 		}
 		const headers = new Headers()
 		headers.set("Content-Type", "text/html")
@@ -74,7 +91,7 @@ async function handleRequest(path: string): Promise<Response> {
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
 			// Replace .ts files with JavaScript
-			file = compileTS(new TextDecoder().decode(file))
+			file = compileTS(new TextDecoder().decode(file), fullPath)
 		}
 
 		// Send the file over
@@ -84,9 +101,9 @@ async function handleRequest(path: string): Promise<Response> {
 	} catch {
 		// Check if file exists as `.ts` instead of `.js`
 		if (path.endsWith(".js"))
-			return handleRequest(path.slice(0, -3) + ".ts")
+			return handleRequest(path.slice(0, -3) + ".ts", fullPath)
 
-		console.log(" > 404")
+		if (!silent) console.log(" > 404")
 		return new Response("404: Not Found!", { status: 404 })
 	}
 
@@ -94,24 +111,36 @@ async function handleRequest(path: string): Promise<Response> {
 }
 
 /** Handles a single connection to the server */
-async function handleConnection(conn: Deno.Conn) {
+async function handleConnection(conn: Deno.Conn, silent?: boolean) {
 	const httpConn = Deno.serveHttp(conn)
 	for await (const requestEvent of httpConn) {
 		const { request } = requestEvent
 		const url = new URL(request.url)
 		const path = url.pathname.substring(1)
-		requestEvent.respondWith(handleRequest(path))
+		requestEvent.respondWith(handleRequest(path, request.url, silent))
 	}
 }
 
+interface StartServerOptions {
+	/** The port number of the server */
+	port: number
+
+	/** The address of the server. Defaults to "localhost" */
+	bind?: string
+
+	/** Wether or not the server emits any messages */
+	silent?: boolean
+}
+
 /** Start the server (non-blocking) */
-export async function startServer(port: number) {
-	const listener = Deno.listen({ port })
-	console.log(`Server running at http://localhost:${port}/`)
+export async function startServer(options: StartServerOptions) {
+	startTSServer()
+	const listener = Deno.listen({ port: options.port })
+	if (!options.silent) console.log(`Server running at http://${options.bind ?? "localhost"}:${options.port}/`)
 	for await (const conn of listener)
-		handleConnection(conn)
+		handleConnection(conn, options.silent)
 }
 
 // Start if this isn't an import
 if (import.meta.main)
-	startServer(8080)
+	startServer({ port: 8080 })

@@ -1,26 +1,88 @@
 import { error, errorNoExit } from "./logging.ts"
 import { markDownToHtml } from "./mdc.ts"
 
-/**
- * Basic CSS that gets added to every compiled file. \
- * TODO: Optimize unused styles.
- */
-// const basicCSS = Deno.readTextFileSync(new URL(import.meta.url).pathname.split("/").slice(0, -1).join("/") + "/../css/basic.css")
 
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
 // off-chance that the user really wrote normal JavaScript, this'll work.
-export let compileTS = (source: string): string => source
-;(async () => {
+/**
+ * Compiles TypeScript code
+ * @param source The code to be compiled
+ * @param fileName The name of the file, used for source mapping
+ * @param minify Whether or not to minify
+ * @returns The outputted JavaScript code
+ */
+// deno-lint-ignore no-unused-vars
+export let compileTS = (source: string, fileName?: string, minify?: boolean): string => source
+
+let startedTSServer = 0 // 0: not started, 1: starting, 2: started
+/** Starts the TypeScript compilation server */
+export async function startTSServer() {
+	// If it's already started, return immediately
+	if (startedTSServer == 2) return
+	if (startedTSServer == 1) {
+		// If it's starting, wait for it to be initialized fully
+		const wait = () => new Promise(resolve => setTimeout(resolve, 500))
+		while (startedTSServer == 1) await wait()
+		return
+	}
+
+	// If this is the first time we're starting it, let the others know
+	startedTSServer = 1
 	const innerTransform = (await import("https://deno.land/x/swc@0.2.1/mod.ts")).transform
-	compileTS = (source: string) =>
-		innerTransform(source, {
+	startedTSServer = 2
+	console.log("TypeScript compiler loaded!")
+	compileTS = (source: string, fileName?: string, minify?: boolean) => {
+		const ret = innerTransform(source, {
 			jsc: {
 				target: "es2022",
-				parser: { syntax: "typescript", tsx: true }
-			}
-		}).code
-})()
+				parser: { syntax: "typescript", tsx: true },
+				minify: minify ? {
+					compress: {
+						arguments: true,
+						arrows: true,
+						booleans: true,
+						collapse_vars: true,
+						comparisons: true,
+						conditionals: true,
+						defaults: false,
+						drop_console: true,
+						drop_debugger: true,
+						ecma: 5,
+						hoist_props: true,
+						if_return: true,
+						inline: 0,
+						join_vars: true,
+						keep_classnames: true,
+						keep_fargs: false,
+						keep_fnames: true,
+						keep_infinity: false,
+						loops: true,
+						passes: 3,
+						properties: true,
+						sequences: 20,
+						side_effects: true,
+						switches: true,
+						typeofs: true,
+						unsafe_math: true,
+					}
+				} : {}
+			},
+			sourceMaps: !!fileName, // Only include source maps if a filename is given
+			minify
+		})
+
+		// The inline sourceMaps are not good, so we inline it ourselves.
+		if (fileName) {
+			// deno-lint-ignore no-explicit-any
+			const sourceMap = JSON.parse((ret as any).map)
+			sourceMap.sources[0] = fileName
+			return ret.code + `\n//# sourceMappingURL=data:application/json;base64,${btoa(JSON.stringify(sourceMap))}`
+		}
+
+		return ret.code
+	}
+}
 
 /** Tags that we won't apply MarkDown to */
 const noMarkDownTags = [
@@ -34,7 +96,8 @@ const headTags = [
 	"title",
 	"css",
 	"style",
-	"meta"
+	"meta",
+	"link"
 ]
 
 /** A virtual element structure */
@@ -57,7 +120,29 @@ function idxToPos(src: string, idx: number): string {
 	const matches = [...src.matchAll(/\n/g)]
 		, lineNum = matches.findIndex(m => m.index! > idx) ?? 0
 		, colNum = idx - matches[lineNum - 1].index!
-	return lineNum + ":" + colNum
+	return (lineNum + 1) + ":" + colNum
+}
+
+const splitAttributeTokens = ".#"
+function splitAttributes(attr: string): string[] {
+	const tokens: string[] = []
+	let curr = ""
+	function push() {
+		if (curr.length == 0) return
+		tokens.push(curr), curr = ""
+	}
+	for (let i = 0; i < attr.length; i++) {
+        if (attr[i] == '"') {
+            curr += attr[i]
+            while (attr[++i] != '"')
+                curr += attr[i]
+            curr += attr[i++]
+        }
+		if (".#(".includes(attr[i])) push()
+		curr += attr[i]
+	}
+    push()
+	return tokens
 }
 
 /** Characters that can be used inside a tag name. */
@@ -69,7 +154,7 @@ const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY012345678
  * @returns The element structure and the last character that it parsed
  */
 function parse(code: string, indent = 0, startI = 0): [Element[], number] {
-	code += "\n"
+	code = (code + "\n").replace(/\G {4}/g, "\t")
 	const els: Element[] = []
 	let tagIndent = 0, tagName = "", i = startI
 	for (; i < code.length; i++) {
@@ -92,11 +177,12 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			if ((code[j] == "\n" || code[j] == " ") && nest == 0) break
 			if (code[j] == "(" || code[j] == "[" || code[j] == "{") nest++
 			else if (code[j] == ")" || code[j] == "]" || code[j] == "}") nest--
-			if (++j > code.length) error("Un-matched nest:", idxToPos(code, i))
+			if (++j > code.length) error("Unmatched nest:", idxToPos(code, i))
 		}
 		const thingsString = code.slice(i, j); i = j
-		const things = thingsString
-			.trim().split(/(?<=.)(?=#|\(|\.)(?![^(]*\))/g)
+		const things = splitAttributes(thingsString.trim())
+
+		console.log({things, thingsString})
 
 		// Get the attributes
 		const attrs: { [key: string]: string } = {}
@@ -189,11 +275,16 @@ function gen(els: Element[], indent = 0): string {
 /**
  * Crawls through the modified element tree, modifying things here and there.
  * Keep in mind this is depth-first, so things are parsed in the order they
- * appear in the oringal file (so sections can't be used before they're
- * declared). This function modifies the element structure in place.
+ * appear in the oringal file (sections can't be used before they're declared).
+ * This function modifies the element structure in place.
  * @param els The element structure we're crawling through
  */
-function crawl(els: Element[], components: Record<string, Element>): {
+function crawl(
+	els: Element[],
+	components: Record<string, Element>,
+	isHead: boolean,
+	options: CompileOptions
+): {
 	tsSources: string[],
 	headElements: Element[]
 } {
@@ -201,11 +292,6 @@ function crawl(els: Element[], components: Record<string, Element>): {
 	const headElements: Element[] = []
 	for (let e = 0; e < els.length; e++) {
 		const el = els[e]
-		if (headTags.includes(el.tagName)) {
-			headElements.push(el)
-			els.splice(e--, 1)
-			continue
-		}
 		if (el.tagName == "css") el.tagName = "style"
 		if (el.attrs && "@" in el.attrs) {
 			// Is a component!
@@ -229,7 +315,7 @@ function crawl(els: Element[], components: Record<string, Element>): {
 				children: [...c.children ?? [], ...el.children ?? []],
 				singleTag: c.singleTag
 			}
-			const crawlResults = crawl(nel.children!, components)
+			const crawlResults = crawl(nel.children!, components, false, options)
 			tsSources.push(...crawlResults.tsSources)
 			headElements.push(...crawlResults.headElements)
 			els[e] = nel
@@ -241,6 +327,13 @@ function crawl(els: Element[], components: Record<string, Element>): {
 			}
 		} else if (el.tagName == "script") {
 			if (el.attrs && "src" in el.attrs) {
+				if (options.convertJStoTS) {
+					// Replace .js with .ts
+					if (el.attrs.src.endsWith(".ts"))
+						el.attrs.src = el.attrs.src.slice(0, -2) + "js"
+					else if (el.attrs.src.endsWith(".ts\""))
+						el.attrs.src = el.attrs.src.slice(0, -3) + "js\""
+				}
 				tsSources.push(el.attrs.src)
 			} else if (el.innerText) {
 				el.innerText = compileTS(el.innerText)
@@ -249,10 +342,18 @@ function crawl(els: Element[], components: Record<string, Element>): {
 		// TODO: repeatable components across multiple files
 		// TODO: parse a few attributes into CSS
 
+		// Crawl through the children
 		if (el.children) {
-			const crawlResults = crawl(el.children, components)
+			const crawlResults = crawl(el.children, components, false, options)
 			tsSources.push(...crawlResults.tsSources)
 			headElements.push(...crawlResults.headElements)
+		}
+
+		// Move into the head tag
+		if (!isHead && headTags.includes(el.tagName)) {
+			headElements.push(el)
+			els.splice(e--, 1)
+			continue
 		}
 	}
 	return {
@@ -266,10 +367,11 @@ function crawl(els: Element[], components: Record<string, Element>): {
  * according to a pretty loose HTML code style, which is more or less what
  * appears after code is parsed by most modern browsers.
  * @param els The element structure we're modifying
- * @returns 
+ * @returns An object with the elements in order, and a list of the TypeScript
+ * sources found within the structure
  */
 let headTag: Element
-function modify(els: Element[]) {
+function modify(els: Element[], options: CompileOptions) {
 	const hasTag = (el: Element, searchTag: string): boolean =>
 		el.children ? !!el.children.find(e => e.tagName == searchTag) : false
 
@@ -313,13 +415,11 @@ function modify(els: Element[]) {
 		tagName: "meta",
 		attrs: {name: '"viewport"', content: '"width=device-width,initial-scale=1.0"'}
 	})
-	// headTag.children!.push({
-	// 	tagName: "style",
-	// 	innerText: basicCSS,
-	// 	notMarkDown: true
-	// } as Element)
 
-	const crawlResults = crawl(els, {})
+	const components = {}
+	crawl(headTag.children ?? [], components, true, options)
+
+	const crawlResults = crawl(els, {}, false, options)
 	headTag.children!.push(...crawlResults.headElements)
 
 	htmlTag.children!.unshift(headTag)
@@ -336,15 +436,19 @@ function modify(els: Element[]) {
 	}
 }
 
+interface CompileOptions {
+	convertJStoTS?: boolean
+}
+
 /**
  * Compiles a string of Spell code.
  * @param code The code
  * @returns The compiled code
  */
-export function compile(code: string): string {
+export function compile(code: string, options?: CompileOptions): string {
 	try {
 		const parsed = parse(code)[0]
-		const { els } = modify(parsed)
+		const { els } = modify(parsed, options ?? {})
 		return gen(els)
 	} catch (e) {
 		errorNoExit("Tried compiling:\n" + code)
@@ -357,6 +461,6 @@ export function compile(code: string): string {
 // Run a simple test if the compile function is ran standalone.
 if (import.meta.main) {
 	const f = Deno.readTextFileSync("index.spl")
-	const out = compile(f)
+	const out = compile(f, {})
 	console.log(out)
 }
