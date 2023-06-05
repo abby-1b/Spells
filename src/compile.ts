@@ -123,26 +123,25 @@ function idxToPos(src: string, idx: number): string {
 	return (lineNum + 1) + ":" + colNum
 }
 
-const splitAttributeTokens = ".#"
-function splitAttributes(attr: string): string[] {
-	const tokens: string[] = []
+function splitModifiers(attr: string): string[] {
+	const modifiers: string[] = []
 	let curr = ""
 	function push() {
 		if (curr.length == 0) return
-		tokens.push(curr), curr = ""
+		modifiers.push(curr), curr = ""
 	}
 	for (let i = 0; i < attr.length; i++) {
-        if (attr[i] == '"') {
-            curr += attr[i]
-            while (attr[++i] != '"')
-                curr += attr[i]
-            curr += attr[i++]
-        }
+		if (attr[i] == '"') {
+			curr += attr[i]
+			while (attr[++i] != '"')
+				curr += attr[i]
+			curr += attr[i++]
+		}
 		if (".#(".includes(attr[i])) push()
 		curr += attr[i]
 	}
-    push()
-	return tokens
+	push()
+	return modifiers
 }
 
 /** Characters that can be used inside a tag name. */
@@ -180,16 +179,37 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			if (++j > code.length) error("Unmatched nest:", idxToPos(code, i))
 		}
 		const thingsString = code.slice(i, j); i = j
-		const things = splitAttributes(thingsString.trim())
+		const things = splitModifiers(thingsString.trim())
 
 		console.log({things, thingsString})
 
 		// Get the attributes
 		const attrs: { [key: string]: string } = {}
 		things.filter(t => t[0] == "(").forEach(a => {
-			a.slice(1, -1).split(",").forEach(n => {
+			const appendAttributes: string[] = []
+			const splitString = a.slice(1, -1)
+			let curr = ""
+
+			for (let i = 0; i < splitString.length; i++) {
+				if (splitString[i] == ',') {
+					appendAttributes.push(curr)
+					curr = ""
+					continue
+				} else if (splitString[i] == '"') {
+					curr += splitString[i]
+					while (splitString[++i] != '"')
+						curr += splitString[i]
+					curr += splitString[i++]
+					continue
+				}
+				curr += splitString[i]
+			}
+			if (curr.length > 0) appendAttributes.push(curr)
+			console.log({appendAttributes, curr})
+			
+			appendAttributes.forEach(n => {
 				const s = n.split("=")
-				attrs[s[0].trim()] = s[1]?.trim()
+				attrs[s[0].trim()] = s.slice(1).join("=")
 			})
 		})
 
