@@ -1,4 +1,5 @@
 import { InstallMethod, tryElseErrSudo } from "../install/base.ts";
+import { VERSION } from "../src/spells.ts";
 import { remove } from "./remove.ts";
 
 export async function update(installType: InstallMethod, currVersion: string) {
@@ -30,6 +31,6 @@ export async function update(installType: InstallMethod, currVersion: string) {
 			] }).output()
 		})
 	} else {
-		console.log("%cSpells is up to date.", "color: green")
+		console.log(`%cSpells is up to date. (v${VERSION})`, "color: green")
 	}
 }

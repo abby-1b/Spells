@@ -10,7 +10,7 @@ import { InstallMethod } from "../install/base.ts"
  * The compiler version (1st) changes when there's any API breaking changes.
  * The 'build' number (2nd) changes whenever anything new is added.
  */
-export const VERSION = "0.4"
+export const VERSION = "0.5"
 
 const COMMANDS: { [key: string]: string[] } = {
 	"help, h, (empty)": [ "Shows this dialogue" ],
