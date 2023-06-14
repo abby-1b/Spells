@@ -1,0 +1,15 @@
+{
+	"src": [
+		"compile.ts",
+		"logging.ts",
+		"mdc.ts",
+		"mod.ts",
+		"server.ts",
+		"spells.ts"
+	],
+	"install": [
+		"base.ts",
+		"noClone.ts",
+		"fromClone.ts"
+	]
+}
