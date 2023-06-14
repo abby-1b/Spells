@@ -9,7 +9,9 @@
 	],
 	"install": [
 		"base.ts",
+		"fromClone.ts",
 		"noClone.ts",
-		"fromClone.ts"
+		"remove.ts",
+		"update.ts"
 	]
 }

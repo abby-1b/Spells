@@ -2,26 +2,44 @@ import { startServer } from "./server.ts"
 import { compile, compileTS, startTSServer } from "./compile.ts"
 import { logStyle, warning } from "./logging.ts"
 
+import { update } from "../install/upgrade.ts"
+import { remove } from "../install/remove.ts"
+import { InstallMethod } from "../install/base.ts"
+
 /**
  * The compiler version (left) changes when there's any API breaking changes.
  * The 'build' number (right) changes whenever anything new is added
  */
-const VERSION = "0.3"
+export const VERSION = "0.3.1"
 
 const COMMANDS: { [key: string]: string[] } = {
 	"help, h, (empty)": [ "Shows this dialogue" ],
-	"server, serve, s  [port] [--bind]": [
+	"version, v": [ "Shows the version number" ],
+
+	"server, serve, s  [port] [--bind] [--silent]": [
 		"Starts a server, accepting an optional argument for the port.",
 		"The default port is :8080",
-		"bind: sets the address that we're outputting to."
+		"bind: sets the address that we're outputting to.",
+		"silent: stops the server from emitting messages"
 	],
+
 	"build, b  buildDir  outDir [--final]": [
 		"Builds the site to vanilla HTML and JS.",
 		"final: minifies before exporting, removing source maps and minifying variable names."
+	],
+
+	"upgrade, u": [
+		"Upgrades spl to the latest version."
+	],
+
+	"remove, rm, r": [
+		"Deletes spl"
 	]
 }
 
-const args = (Deno.args ?? []).map(a => a.replace(/^-{1,}/g, ""))
+/** The passed arguments. */
+const args = [...Deno.args]
+const installMode = args.shift()! as InstallMethod
 
 async function getFiles(path: string) {
 	if (!path.endsWith("/")) path += "/"
@@ -43,11 +61,14 @@ if (args.length == 0 || args[0][0] == "h") {
 	console.log("\nCommands:")
 	for (const c in COMMANDS) {
 		logStyle("color: blue; font-weight: bold", "    " + c)
-		for (let l of COMMANDS[c]) {
+		for (const l of COMMANDS[c]) {
 			logStyle(l.startsWith("--") ? "color: yellow" : "", "        " + l)
 		}
 		console.log()
 	}
+	Deno.exit()
+} else if (args[0][0] == "v") {
+	logStyle("font-weight: bold", "Spells v" + VERSION)
 	Deno.exit()
 } else if (args[0][0] == "s") {
 	// Server
@@ -94,19 +115,8 @@ if (args.length == 0 || args[0][0] == "h") {
 			}
 		}
 	}
-	// if (args.length == 1)
-	// 	warning("No file provided, defaulting to index.spl")
-	// const files: string[] = 
-	// 	args.length > 1
-	// 		? args.slice(1)
-	// 		: ["index.spl"]
-	// for (const f of files) {
-	// 	if (!f.endsWith(".spl")) {
-	// 		console.warn(`Can't compile non-.spl file: ${f}`)
-	// 		continue
-	// 	}
-	// 	const code = Deno.readTextFileSync(f)
-	// 	const compiled = compile(code)
-	// 	Deno.writeTextFileSync(f.replace(/\.spl$/g, ".html"), compiled)
-	// }
+} else if (args[0][0] == "u") {
+	await update(installMode, VERSION)
+} else if (args[0][0] == "r") {
+	await remove(installMode)
 }

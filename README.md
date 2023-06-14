@@ -15,14 +15,11 @@ Yeah, that's what happened here.
 
 As previously stated, this... thing™ mixes JavaScript, TypeScript, MarkDown, and Pug together in a decently cohesive way. Since Pug is already a compiled language, I just took the librety to compile more things while I'm at it!
 
-The compiler is able to convert any MarkDown left in the source into its HTML representation. The MarkDown here is a small subset of the [accepted MarkDown spec](https://spec-md.com/).
+The compiler is able to convert any MarkDown left in the source into its HTML representation. The MarkDown here is a small subset of the [MarkDown spec](https://spec-md.com/).
 
-The thing™ also compiles Pug into HTML, with a few added features and a few removed features (most notably no variables or pipes, but support for reusable components)! The Pug compiler is also a subset of the [accepted Pug spec](https://pugjs.org/language/attributes.html).
+The thing™ also compiles Pug into HTML, with a few added features and a few removed features (most notably no variables or pipes, but support for reusable components)! The Pug compiler is also a subset of the [Pug spec](https://pugjs.org/language/attributes.html).
 
 Finally, any TypeScript found in script tags is compiled into plain JavaScript. This is not a subset, as I'd rather die than write my own TypeScript compiler.
 
-<br>
-<br>
-
-# 
-<sub>I'm currently working on a logo. Let's hope it's decent!</sub>
+# Install
+Follow the instructions [here](./INSTALL.md) to install. Windows is currently unsupported, but Mac and Linux should work just fine.
