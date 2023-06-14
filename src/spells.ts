@@ -7,10 +7,10 @@ import { remove } from "../install/remove.ts"
 import { InstallMethod } from "../install/base.ts"
 
 /**
- * The compiler version (left) changes when there's any API breaking changes.
- * The 'build' number (right) changes whenever anything new is added
+ * The compiler version (1st) changes when there's any API breaking changes.
+ * The 'build' number (2nd) changes whenever anything new is added.
  */
-export const VERSION = "0.3.1"
+export const VERSION = "0.4"
 
 const COMMANDS: { [key: string]: string[] } = {
 	"help, h, (empty)": [ "Shows this dialogue" ],

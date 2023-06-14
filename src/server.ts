@@ -24,7 +24,7 @@ async function exists(f: string): Promise<boolean> {
 async function getData(f: string): Promise<Deno.FileInfo | undefined> {
 	try {
 		return await Deno.stat(f)
-	} catch {}
+	} catch { 0 }
 }
 
 /** Handles a single request, which only uses the given path. */
@@ -107,7 +107,7 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 		return new Response("404: Not Found!", { status: 404 })
 	}
 
-	return new Response("Something went wrong!", { status: 404 })
+	// return new Response("Something went wrong!", { status: 404 })
 }
 
 /** Handles a single connection to the server */
