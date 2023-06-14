@@ -12,6 +12,6 @@
 		"fromClone.ts",
 		"noClone.ts",
 		"remove.ts",
-		"update.ts"
+		"upgrade.ts"
 	]
 }
