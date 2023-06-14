@@ -21,7 +21,7 @@ export async function update(installType: InstallMethod, currVersion: string) {
 		)
 
 		// Remove the current install
-		remove(installType)
+		remove(installType, false)
 
 		// Re-install
 		await tryElseErrSudo(async () => {

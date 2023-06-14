@@ -1,6 +1,6 @@
 import { InstallMethod, installDirPath, locationFile, tryElseErrSudo } from "./base.ts"
 
-export async function remove(installMode: InstallMethod) {
+export async function remove(installMode: InstallMethod, forUpgrade = false) {
 	let removeDir = true
 	if (installMode == "clone") {
 		// Print the little clone dialog
@@ -18,11 +18,13 @@ export async function remove(installMode: InstallMethod) {
 		removeDir = false
 	}
 
-	// Ask the user, to prevent unwanted removal
-	if ((prompt("Are you sure you want to uninstall Spells? [yes/y]") ?? "n")[0] != "y") {
-		console.log("\nCanceled.")
-		Deno.exit()
-		return
+	if (!forUpgrade) {
+		// Ask the user, to prevent unwanted removal
+		if ((prompt("Are you sure you want to uninstall Spells? [yes/y]") ?? "n")[0] != "y") {
+			console.log("\nCanceled.")
+			Deno.exit()
+			return
+		}
 	}
 
 	await tryElseErrSudo(async () => {
@@ -35,6 +37,8 @@ export async function remove(installMode: InstallMethod) {
 		}
 	})
 	
-	console.log("Spells has been uninstalled.")
-	Deno.exit()
+	if (!forUpgrade) {
+		console.log("Spells has been uninstalled.")
+		Deno.exit()
+	}
 }
