@@ -1,13 +1,19 @@
-
 head
 	title Spells!
 	script(src="script.ts")
 	css(src="./css/basic.css")
 	css(src="./css/modifiers.css")
+	meta(property="og:title" content="Spells!")
+	link(rel="icon" type="image/png" href="/assets/icon.png")
+	meta(property="og:description" content="A half-decent amalgamation of languages that's... pretty fast.")
+	meta(property="og:type" content="website")
+	meta(property="og:image" content="/assets/icon.png")
 
 section.tall#title
+	img(src="/assets/banner.png").hero
+
 	h1.text-center.
-		**Spells**: A half-decent amalgamation of languages that's... pretty fast.
+		A half-decent amalgamation of languages that's... pretty fast.
 
 section#secondary
 	p.
