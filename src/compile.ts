@@ -181,8 +181,6 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 		const thingsString = code.slice(i, j); i = j
 		const things = splitModifiers(thingsString.trim())
 
-		console.log({things, thingsString})
-
 		// Get the attributes
 		const attrs: { [key: string]: string } = {}
 		things.filter(t => t[0] == "(").forEach(a => {
@@ -191,7 +189,8 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			let curr = ""
 
 			for (let i = 0; i < splitString.length; i++) {
-				if (splitString[i] == ',') {
+				if (splitString[i] == ',' || splitString[i] == ' ') {
+					if (curr.length == 0) continue
 					appendAttributes.push(curr)
 					curr = ""
 					continue
@@ -199,13 +198,13 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 					curr += splitString[i]
 					while (splitString[++i] != '"')
 						curr += splitString[i]
-					curr += splitString[i++]
+					curr += splitString[i]
 					continue
 				}
 				curr += splitString[i]
 			}
 			if (curr.length > 0) appendAttributes.push(curr)
-			console.log({appendAttributes, curr})
+			// console.log({appendAttributes})
 			
 			appendAttributes.forEach(n => {
 				const s = n.split("=")
