@@ -123,6 +123,11 @@ function idxToPos(src: string, idx: number): string {
 	return (lineNum + 1) + ":" + colNum
 }
 
+/**
+ * Splits a string of attributes passed to a tag into separate strings
+ * @param attr The attributes to be split
+ * @returns The separated strings
+ */
 function splitModifiers(attr: string): string[] {
 	const modifiers: string[] = []
 	let curr = ""
@@ -216,11 +221,15 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 		const children: Element[] = []
 		let innerText: string | undefined
 		if (things[things.length - 1] == ".") {
-			const endIndex = [...code.matchAll(
-				new RegExp(`^\t{0,${indent}}(?!\t)`, "gm")
-			)].find(m => m.index! >= i)!.index! - 1
-			innerText = code
-				.slice(i + 1, endIndex)
+			// If the tag ends with a dot, capture multiple lines after it.
+			const matches = [...code.matchAll(
+				new RegExp(`^\t{0,${indent}}(?!\t)(?!$)`, "gm")
+			)]
+			const endIndex = (
+				matches.find(m => m.index! >= i) ?? { index: code.length - 1 }
+			).index! - 1
+			innerText = code.slice(i + 1, endIndex)
+			console.log({ innerText })
 			i = endIndex
 		} else {
 			// If the string isn't multiline, it could still have some text!
