@@ -130,9 +130,9 @@ async function handleConnection(conn: Deno.Conn, opts: ServerOptions) {
 		// Check through the routes...
 		let tookRoute = false
 		for (const r of opts.routes ?? []) {
-			if (!r.capture(splReq)) continue
+			if (!await r.capture(splReq)) continue
 			// A route was found! Send its output to the client
-			requestEvent.respondWith(r.routingFn(splReq, opts))
+			requestEvent.respondWith(await r.routingFn(splReq, opts))
 			tookRoute = true
 			break
 		}
@@ -159,10 +159,10 @@ interface ServerOptions {
 
 interface Route {
 	/** If this function returns true, the output is routed through this route. */
-	capture: (req: SpellsRequest) => boolean,
+	capture: (req: SpellsRequest) => Promise<boolean> | boolean,
 
 	/** If `capture` returns true, this function will be called. */
-	routingFn: (req: SpellsRequest, opts: ServerOptions) => Response
+	routingFn: (req: SpellsRequest, opts: ServerOptions) => Promise<Response> | Response
 }
 
 /** Creates a simple route that matches a path string. */
