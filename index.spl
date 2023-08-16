@@ -1,23 +1,37 @@
 head
-	title Spells!
+	title Spells
 	script(src="script.ts")
 	css(src="./css/basic.css")
 	css(src="./css/modifiers.css")
-	meta(property="og:title" content="Spells!")
-	link(rel="icon" type="image/png" href="./assets/icon.png")
-	meta(property="og:description" content="A half-decent amalgamation of languages that's... pretty fast.")
-	meta(property="og:type" content="website")
-	meta(property="og:image" content="/assets/icon.png")
+	meta(property="og:title", content="Spells!")
+	link(rel="icon", type="image/png", href="./assets/icon.png")
+	meta(
+		property="og:description",
+		content="A half-decent amalgamation of languages that's... pretty fast."
+	)
+	meta(property="og:type", content="website")
+	meta(property="og:image", content="/assets/icon.png")
+	style.
+		:root { --mainColor: #b097c2; }
+		* { color: #fbf8ff; }
+		.mainColorText { color: var(--mainColor); }
+		html, body { background-color: #1b222e; }
+		/* These are only in one line because it's convenient. I would *never*
+		do this in real production code! Wait... */
 
 section.tall#title
-	img(src="./assets/banner.png").hero
+	img(src="./assets/bannerDarkMode.png").hero
 
 	h1.text-center.
-		A half-decent amalgamation of languages that's... pretty fast.
+		A blazingly fast amalgamation of languages
 
 section#secondary
 	p.
-		Have you ever wanted to use a combination of JavaScript, TypeScript, MarkDown, and Pug/Jade to mash modules, components, hopes, and dreams into something barely representative of the Web Developer you really are, but in a fraction of the time it would take you to do the same thing in a sane matter (y'know, by _not_ mixing languages together)? \
+		Have you ever wanted to use a combination of JavaScript, TypeScript,
+		MarkDown, and Pug/Jade to mash modules, components, hopes, and dreams
+		into something barely representative of the Web Developer you really
+		are, but in a fraction of the time it would take you to do the same
+		thing in a sane matter (you know, by _not_ mixing languages together)? \
 		
 		Well, now you can!
 
@@ -28,4 +42,5 @@ section
 
 section(style="--vertSpace:20px")
 	p(style="font-size:0.8em").no-margin.
-		This site was made with the Spells compiler! For more info email me at [`codeiguess@gmail.com`](mailto:codeiguess@gmail.com)
+		This site was made with the Spells compiler! For more info email me at
+		[`abby.041b@gmail.com`](mailto:abby.041b@gmail.com)

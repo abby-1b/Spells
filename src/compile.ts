@@ -85,19 +85,27 @@ export async function startTSServer() {
 }
 
 /** Tags that we won't apply MarkDown to */
-const noMarkDownTags = [
+const tagNoMarkDown = [
 	"style",
 	"css",
 	"script"
 ]
 
 /** Tags that will be moved to the `head` tag */
-const headTags = [
+const tagHead = [
 	"title",
 	"css",
 	"style",
 	"meta",
 	"link"
+]
+
+/**
+ * Tags that don't have closing tags by default.
+ * NOTE: Adding Text to any of these tags makes them still have a closing tag.
+ */
+const tagSingle = [
+	"meta"
 ]
 
 /** A virtual element structure */
@@ -229,7 +237,6 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 				matches.find(m => m.index! >= i) ?? { index: code.length - 1 }
 			).index! - 1
 			innerText = code.slice(i + 1, endIndex)
-			console.log({ innerText })
 			i = endIndex
 		} else {
 			// If the string isn't multiline, it could still have some text!
@@ -249,7 +256,8 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			clss: things.filter(t => t[0] == "." && t.length > 1).map(c => c.slice(1)),
 			id: things.filter(t => t[0] == "#")[0]?.slice(1),
 			innerText, children,
-			notMarkDown: noMarkDownTags.includes(tagName)
+			notMarkDown: tagNoMarkDown.includes(tagName),
+			singleTag: tagSingle.includes(tagName)
 		} as Element), tagName = "", tagIndent = 0
 	}
 	return [els, i]
@@ -378,7 +386,7 @@ function crawl(
 		}
 
 		// Move into the head tag
-		if (!isHead && headTags.includes(el.tagName)) {
+		if (!isHead && tagHead.includes(el.tagName)) {
 			headElements.push(el)
 			els.splice(e--, 1)
 			continue

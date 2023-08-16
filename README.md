@@ -1,8 +1,8 @@
 ![Banner](./assets/banner.png)
 
-# **Spells**: A half-decent amalgamation of languages that's... pretty fast.
+# **Spells**: A blazingly fast amalgamation of languages
 
-Have you ever wanted to use a combination of JavaScript, TypeScript, MarkDown, and Pug/Jade to mash modules, semi-components, hopes, and dreams into something barely representative of the Web Developer™ you really are, but in a fraction of the time it would take you to do the same thing in a sane matter, y'know, by _not_ mixing languages together?
+Have you ever wanted to use a combination of JavaScript, TypeScript, MarkDown, and Pug/Jade to mash modules, semi-components, hopes, and dreams together into something barely representative of the Web Developer™ you really are, but in a fraction of the time it would take you to do the same thing in a sane matter, y'know, by _not_ mixing languages together?
 
 Well, now you can!
 
