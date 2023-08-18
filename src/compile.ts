@@ -1,6 +1,8 @@
 import { error, errorNoExit } from "./logging.ts"
 import { markDownToHtml } from "./mdc.ts"
+import { pathGoUp, readTextFileSync } from "./path.ts"
 
+// TODO: implement variables (including dynamics!)
 
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
@@ -162,23 +164,35 @@ const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY012345678
 
 /**
  * Parses a string into an element structure.
- * @param code The code we're parsing 
+ * @param code The code we're parsing
+ * @param indent The level of indentation that we're checking 
  * @returns The element structure, and the last character that it parsed
  */
 function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 	code = (code + "\n").replace(/\G {4}/g, "\t")
 	const els: Element[] = []
-	let tagIndent = 0, tagName = "", i = startI
+	let tagIndent = 0,
+		tagName = "",
+		i = startI
 	for (; i < code.length; i++) {
 		const c = code[i]
 		if (nameChars.includes(c)) {
-			tagName += code[i]
+			tagName += c
 			continue
 		}
+
+		// If a tab is found, increase the indent level
 		if (c == "\t") tagIndent++
+		
+		// If there's no tag (so just a tab), don't let the code below run.
 		if (tagName.length == 0) continue
+
+		/// ONCE WE HAVE A TAG,
+
+		// If a tag is found before the expected indent, break out of the loop.
+		// This makes the element be processed by the outer function.
 		if (tagIndent < indent) {
-			i -= tagName.length + 2
+			i -= tagName.length + 1 + tagIndent
 			break
 		}
 
@@ -217,7 +231,6 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 				curr += splitString[i]
 			}
 			if (curr.length > 0) appendAttributes.push(curr)
-			// console.log({appendAttributes})
 			
 			appendAttributes.forEach(n => {
 				const s = n.split("=")
@@ -258,7 +271,9 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			innerText, children,
 			notMarkDown: tagNoMarkDown.includes(tagName),
 			singleTag: tagSingle.includes(tagName)
-		} as Element), tagName = "", tagIndent = 0
+		} as Element)
+		tagName = ""
+		tagIndent = 0
 	}
 	return [els, i]
 }
@@ -344,7 +359,7 @@ function crawl(
 			// TODO: import HTML too
 
 			if (!el.innerText) error("Please provide a file to import")
-			const code = Deno.readTextFileSync(el.innerText!)
+			const code = readTextFileSync(pathGoUp(options.filePath) + "/" + el.innerText!)
 			const parsed = parse(code)[0]
 			els.splice(e, 1, ...parsed)
 			el = els[e]
@@ -367,7 +382,7 @@ function crawl(
 			const nel: Element = {
 				tagName: c.tagName,
 				attrs: { ...c.attrs },
-				clss: [...c.clss ?? []],
+				clss: [el.tagName, ...c.clss ?? []],
 				id: c.id,
 				innerText: c.innerText,
 				children: [...c.children ?? [], ...el.children ?? []],
@@ -497,29 +512,30 @@ function modify(els: Element[], options: CompileOptions) {
 
 interface CompileOptions {
 	convertJStoTS?: boolean
+	filePath: string
 }
 
 /**
  * Compiles a string of Spell code.
  * @param code The code
+ * @param options The compile options for said code
  * @returns The compiled code
  */
-export function compile(code: string, options?: CompileOptions): string {
+export function compile(code: string, options: CompileOptions): string {
 	try {
 		const parsed = parse(code)[0]
-		const { els } = modify(parsed, options ?? {})
+		const { els } = modify(parsed, options)
 		return gen(els)
 	} catch (e) {
 		errorNoExit("Tried compiling:\n" + code)
 		console.log(e)
-		// errorNoExit(e, false)
 		return ""
 	}
 }
 
 // Run a simple test if the compile function is ran standalone.
 if (import.meta.main) {
-	const f = Deno.readTextFileSync("index.spl")
-	const out = compile(f, {})
-	console.log(out)
+	const path = "test/index.spl"
+	const f = readTextFileSync(path)
+	const out = compile(f, { filePath: path })
 }

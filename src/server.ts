@@ -88,7 +88,7 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 
 		if (path.endsWith("spl")) {
 			// Replace .spl files with compiled HTML
-			file = compile(new TextDecoder().decode(file))
+			file = compile(new TextDecoder().decode(file), { filePath: path })
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
 			// Replace .ts files with JavaScript
