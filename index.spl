@@ -1,8 +1,6 @@
 head
 	title Spells
 	script(src="script.ts")
-	css(src="./css/basic.css")
-	css(src="./css/modifiers.css")
 	meta(property="og:title", content="Spells!")
 	link(rel="icon", type="image/png", href="./assets/icon.png")
 	meta(
@@ -12,12 +10,53 @@ head
 	meta(property="og:type", content="website")
 	meta(property="og:image", content="/assets/icon.png")
 	style.
-		:root { --mainColor: #b097c2; }
-		* { color: #fbf8ff; }
+		:root {
+			--mainColor: #b097c2;
+			--contentWidth: 800px;
+			--sideSpace: calc(50vw - var(--contentWidth) / 2);
+			--sideSpaceMin: 5vw;
+			--vertSpace: 80px;
+		}
+		* {
+			font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+			margin-top: 0;
+			color: #fbf8ff;
+		}
+		
 		.mainColorText { color: var(--mainColor); }
-		html, body { background-color: #1b222e; }
+		html, body {
+			background-color: #1b222e;
+			margin: 0;
+			padding: 0;
+		}
+		.text-center { text-align: center; }
 		/* These are only in one line because it's convenient. I would *never*
 		do this in real production code! Wait... */
+		
+		.hero {
+			object-fit: contain;
+			width: 100%;
+		}
+
+		section:nth-child(2n + 0) { background-color: #0002; }
+		section:nth-child(2n + 1) { background-color: #ffffff03; }
+
+		section {
+			padding: var(--vertSpace);
+			padding-left: max(var(--sideSpaceMin), var(--sideSpace));
+			padding-right: max(var(--sideSpaceMin), var(--sideSpace));
+			overflow: hidden;
+		}
+		section.tall {
+			padding-top: 30vh;
+			padding-bottom: 30vh;
+		}
+
+		code {
+			font-family: monospace;
+			border-radius: 2px;
+			padding: 2px;
+		}
 
 section.tall#title
 	img(src="./assets/bannerDarkMode.png").hero
@@ -32,15 +71,12 @@ section#secondary
 		into something barely representative of the Web Developer you really
 		are, but in a fraction of the time it would take you to do the same
 		thing in a sane matter (you know, by _not_ mixing languages together)? \
-		
-		Well, now you can!
 
-section
-	h2.no-margin _Amalgamation:_
-	h3.no-margin _the action, process, or result of combining or uniting._
-	p.top-margin Yeah, that's what happened here.
+		Well, now you can!
 
 section(style="--vertSpace:20px")
 	p(style="font-size:0.8em").no-margin.
-		This site was made with the Spells compiler! For more info email me at
-		[`abby.041b@gmail.com`](mailto:abby.041b@gmail.com)
+		This site was made with the Spells compiler! \
+
+		GitHub: [`https://github.com/abby-1b/Spells`](https://github.com/abby-1b/Spells) \
+		Contact: [`abby.041b@gmail.com`](mailto:abby.041b@gmail.com)
