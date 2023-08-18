@@ -158,12 +158,12 @@ function splitModifiers(attr: string): string[] {
 }
 
 /** Characters that can be used inside a tag name. */
-const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_-"
+const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_-@"
 
 /**
  * Parses a string into an element structure.
  * @param code The code we're parsing 
- * @returns The element structure and the last character that it parsed
+ * @returns The element structure, and the last character that it parsed
  */
 function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 	code = (code + "\n").replace(/\G {4}/g, "\t")
@@ -327,10 +327,32 @@ function crawl(
 	const tsSources: string[] = []
 	const headElements: Element[] = []
 	for (let e = 0; e < els.length; e++) {
-		const el = els[e]
+		let el = els[e]
+		if ([
+			"@import",
+			"@require",
+			"@include",
+			"@requires",
+			"@includes",
+			"@needs",
+			"@wants",
+			"@desires",
+			"@necessitates",
+			"@steal-code-from"
+		].includes(el.tagName)) {
+			// We're importing another `.spl` file!
+			// TODO: import HTML too
+
+			if (!el.innerText) error("Please provide a file to import")
+			const code = Deno.readTextFileSync(el.innerText!)
+			const parsed = parse(code)[0]
+			els.splice(e, 1, ...parsed)
+			el = els[e]
+		}
 		if (el.tagName == "css") el.tagName = "style"
 		if (el.attrs && "@" in el.attrs) {
-			// Is a component!
+			// This is a component!
+
 			if (!(el.tagName in components)) {
 				// It's a new component!
 				components[el.tagName] = el // Add component to the dict
@@ -375,8 +397,8 @@ function crawl(
 				el.innerText = compileTS(el.innerText)
 			}
 		}
-		// TODO: repeatable components across multiple files
-		// TODO: parse a few attributes into CSS
+
+		// TODO: parse a few attributes into CSS (maybe? maybe not?)
 
 		// Crawl through the children
 		if (el.children) {
@@ -416,10 +438,11 @@ function modify(els: Element[], options: CompileOptions) {
 	const topTags = els.map(e => e.tagName)
 	if (!topTags.includes("html")) {
 		// Add <html> around everything
-		els = [htmlTag = {
+		htmlTag = {
 			tagName: "html",
 			children: els
-		} as Element]
+		} as Element
+		els = [ htmlTag ]
 	} else htmlTag = els[topTags.indexOf("html")]
 	if (!hasTag(htmlTag, "body")) {
 		// Add <body> around everything after <head>
