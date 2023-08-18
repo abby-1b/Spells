@@ -20,9 +20,9 @@ component-name(@)
 This will display the component wherever you've placed it. This is what the
 generated HTML will look like:
 ```html
-<component-name @>
+<div @ class="component-name">
 	<p>This text is inside the component!</p>
-</component-name>
+</div>
 ```
 
 <sub>Note: the @ attribute still stays on the element, though that might be
@@ -63,9 +63,9 @@ cool-component(@, name="Mary")
 
 Which would create the following HTML:
 ```html
-<cool-component @ name="Mary">
+<div @ class="cool-component" name="Mary">
 	<p>Hello, Mary!</p>
-</cool-component>
+</div>
 ```
 
 ## ✨Dynamic Variables✨
@@ -87,9 +87,9 @@ dynamic-component(@, name="Jane")#my-component
 
 However, the attributes don't get compiled into the HTML this time...
 ```html
-<cool-component @ id="my-component">
+<div @ class="dynamic-component" id="my-component">
 	<p>Hello, Jane!</p>
-</cool-component>
+</div>
 ```
 
 Here's where the magic happens: by assigning this component as dynamic, we can
@@ -103,9 +103,9 @@ dynamicComponent.name = "John F. Kennedy"
 The JavaScript code above modifies the component, which refreshes its contents
 and ends up like this:
 ```html
-<cool-component @ id="my-component">
+<div @ class="dynamic-component" id="my-component">
 	<p>Hello, Jane!</p>
-</cool-component>
+</div>
 ```
 
 <sub>Note: Attributes aren't present in dynamic components to avoid confusion
