@@ -1,7 +1,9 @@
 
 # Installation instructions
 
-**Important:** This is a Linux/MacOS only library. The installer will not work on Windows!
+**Important:** This is a Linux/MacOS only library.
+The installer will not work on Windows!
+_We're working on making the library platform-independent._
 
 First, [make sure you've got Deno installed](https://deno.land/manual@v1.31.1/getting_started/installation):
 ```
