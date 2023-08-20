@@ -159,6 +159,17 @@ function splitModifiers(attr: string): string[] {
 	return modifiers
 }
 
+function replaceVariables(inputString: string, varDict: Record<string, string>): string {
+	const ret = inputString.replace(/@{[a-zA-Z0-9_\-@]*?}/g, e => {
+		const varName = e.slice(2, -1)
+		if (!(varName in varDict)) return e
+		let out = varDict[varName]
+		if (out.startsWith('"') || out.startsWith("'")) out = out.slice(1, -1)
+		return out
+	})
+	return ret
+}
+
 /** Characters that can be used inside a tag name. */
 const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_-@"
 
@@ -168,7 +179,12 @@ const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY012345678
  * @param indent The level of indentation that we're checking 
  * @returns The element structure, and the last character that it parsed
  */
-function parse(code: string, indent = 0, startI = 0): [Element[], number] {
+function parse(
+	code: string,
+	indent = 0,
+	startI = 0,
+	parentVariables?: Record<string, any>
+): [Element[], number] {
 	code = (code + "\n").replace(/\G {4}/g, "\t")
 	const els: Element[] = []
 	let tagIndent = 0,
@@ -209,7 +225,7 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 		const things = splitModifiers(thingsString.trim())
 
 		// Get the attributes
-		const attrs: { [key: string]: string } = {}
+		const attrs: Record<string, string> = {}
 		things.filter(t => t[0] == "(").forEach(a => {
 			const appendAttributes: string[] = []
 			const splitString = a.slice(1, -1)
@@ -237,15 +253,16 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 				attrs[s[0].trim()] = s.slice(1).join("=")
 			})
 		})
+		const variables = { ...attrs, ...parentVariables }
 
 		// Get innerText / children
 		const children: Element[] = []
 		let innerText: string | undefined
 		if (things[things.length - 1] == ".") {
-			// If the tag ends with a dot, capture multiple lines after it.
-			const matches = [...code.matchAll(
+			// If it ends with a dot, capture multiple lines of text after it
+			const matches = [ ...code.matchAll(
 				new RegExp(`^\t{0,${indent}}(?!\t)(?!$)`, "gm")
-			)]
+			) ]
 			const endIndex = (
 				matches.find(m => m.index! >= i) ?? { index: code.length - 1 }
 			).index! - 1
@@ -258,7 +275,7 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
 			i = until
 
 			// If it's not multline, it can always have children!
-			const [elements, finishI] = parse(code, indent + 1, i)
+			const [elements, finishI] = parse(code, indent + 1, i, variables)
 			children.push(...elements)
 			i = finishI
 		}
@@ -284,7 +301,7 @@ function parse(code: string, indent = 0, startI = 0): [Element[], number] {
  * @param indent The current level of indentation
  * @returns The generated string of HTML code
  */
-function gen(els: Element[], indent = 0): string {
+function gen(els: Element[], indent = 0, variables: Record<string, string>): string {
 	let out = "", i = 0
 	for (const e of els) {
 		out += (i++ == 0 ? "<" : "\n<") + e.tagName // Tag beginning
@@ -302,14 +319,18 @@ function gen(els: Element[], indent = 0): string {
 
 		// Append innerText and children (recursively)
 		const isTooLong = (e.innerText ?? "").length > 70
-		if (e.innerText && e.innerText.length > 0)
-			out += e.notMarkDown
-				? e.innerText
+		if (e.innerText && e.innerText.length > 0) {
+			// Replace variables statically!
+			const replacedInner = replaceVariables(e.innerText, variables)
+
+			// Add to the output
+			out += e.notMarkDown ? replacedInner
 				: (isTooLong ? "\n\t" : "")
-				+ markDownToHtml(e.innerText)
-				+ (isTooLong ? "\n" : "")
+					+ markDownToHtml(replacedInner)
+					+ (isTooLong ? "\n" : "")
+		}
 		if (e.children && e.children.length > 0)
-			out += "\n\t" + gen(e.children, indent + 1)
+			out += "\n\t" + gen(e.children, indent + 1, { ...variables, ...e.attrs })
 				.split("\n").join("\n\t")
 				+ "\n"
 
@@ -381,8 +402,8 @@ function crawl(
 			const c = components[el.tagName]
 			const nel: Element = {
 				tagName: c.tagName,
-				attrs: { ...c.attrs },
-				clss: [el.tagName, ...c.clss ?? []],
+				attrs: { ...c.attrs, ...el.attrs },
+				clss: [el.tagName, ...el.clss ?? [], ...c.clss ?? []],
 				id: c.id,
 				innerText: c.innerText,
 				children: [...c.children ?? [], ...el.children ?? []],
@@ -525,7 +546,7 @@ export function compile(code: string, options: CompileOptions): string {
 	try {
 		const parsed = parse(code)[0]
 		const { els } = modify(parsed, options)
-		return gen(els)
+		return gen(els, 0, {})
 	} catch (e) {
 		errorNoExit("Tried compiling:\n" + code)
 		console.log(e)
