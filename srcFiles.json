@@ -1,9 +1,12 @@
 {
 	"src": [
 		"compile.ts",
+		"highlight.ts",
 		"logging.ts",
 		"mdc.ts",
 		"mod.ts",
+		"path.ts",
+		"pfw.ts",
 		"server.ts",
 		"spells.ts"
 	],
