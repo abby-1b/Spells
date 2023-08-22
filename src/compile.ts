@@ -111,7 +111,7 @@ const tagSingle = [
 ]
 
 /** A virtual element structure */
-interface Element {
+export interface Element {
 	tagName: string
 	attrs?: { [key: string]: string }
 	clss?: string[]
@@ -120,6 +120,7 @@ interface Element {
 	children?: Element[]
 	singleTag?: boolean
 	notMarkDown?: boolean
+	multiline?: boolean
 }
 
 /**
@@ -179,11 +180,11 @@ const nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY012345678
  * @param indent The level of indentation that we're checking 
  * @returns The element structure, and the last character that it parsed
  */
-function parse(
+export function parse(
 	code: string,
 	indent = 0,
 	startI = 0,
-	parentVariables?: Record<string, any>
+	parentVariables?: Record<string, string>
 ): [Element[], number] {
 	code = (code + "\n").replace(/\G {4}/g, "\t")
 	const els: Element[] = []
@@ -258,7 +259,8 @@ function parse(
 		// Get innerText / children
 		const children: Element[] = []
 		let innerText: string | undefined
-		if (things[things.length - 1] == ".") {
+		const isMultiline = things[things.length - 1] == "."
+		if (isMultiline) {
 			// If it ends with a dot, capture multiple lines of text after it
 			const matches = [ ...code.matchAll(
 				new RegExp(`^\t{0,${indent}}(?!\t)(?!$)`, "gm")
@@ -287,8 +289,9 @@ function parse(
 			id: things.filter(t => t[0] == "#")[0]?.slice(1),
 			innerText, children,
 			notMarkDown: tagNoMarkDown.includes(tagName),
-			singleTag: tagSingle.includes(tagName)
-		} as Element)
+			singleTag: tagSingle.includes(tagName),
+			multiline: isMultiline
+		})
 		tagName = ""
 		tagIndent = 0
 	}
@@ -407,7 +410,8 @@ function crawl(
 				id: c.id,
 				innerText: c.innerText,
 				children: [...c.children ?? [], ...el.children ?? []],
-				singleTag: c.singleTag
+				singleTag: c.singleTag,
+				multiline: c.multiline
 			}
 			const crawlResults = crawl(nel.children!, components, false, options)
 			tsSources.push(...crawlResults.tsSources)
@@ -531,7 +535,7 @@ function modify(els: Element[], options: CompileOptions) {
 	}
 }
 
-interface CompileOptions {
+export interface CompileOptions {
 	convertJStoTS?: boolean
 	filePath: string
 }
@@ -554,9 +558,10 @@ export function compile(code: string, options: CompileOptions): string {
 	}
 }
 
-// Run a simple test if the compile function is ran standalone.
+// Run a simple test if this is ran standalone
 if (import.meta.main) {
 	const path = "test/index.spl"
 	const f = readTextFileSync(path)
 	const out = compile(f, { filePath: path })
+	console.log(out)
 }
