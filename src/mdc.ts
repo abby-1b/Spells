@@ -36,12 +36,14 @@ export function markDownToHtml(md: string): string {
 		.replace(/\*[^*]*?\*/gm, e => "<i>" + e.slice(1, -1) + "</i>")
 		.replace(/_.*?_/gm, e => "<i>" + e.slice(1, -1) + "</i>")
 	
-	// Monospace
+	// Monospace (`like this`)
 		.replace(/\`[^\`]{1,}\`(?!`)/gm, e => "<code>" + e.slice(1, -1) + "</code>")
 		.replace(/```(.|\n)*?```/gm, e => "<br><code>" + e.slice(3, -3).replace(/\n/g, "<br>") + "</code>")
 
-	// Superscript
-		.replace(/\^.+?(?=\s)/g, e => "<sup>" + e.slice(1) + "</sup>")
+	// Superscript (x^this_is_sup)
+		.replace(/\^.+?(?=\s|$)/g, e => "<sup>" + e.slice(1) + "</sup>")
+
+	// Subscript isn't implemented due to underscore conflicting with italics
 	
 	// Spacers (newlines, basically)
 		.replace(/\\/g, "\n<br>")
