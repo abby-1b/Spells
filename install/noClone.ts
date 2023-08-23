@@ -17,7 +17,7 @@ try {
 	const dirs: Record<string, string[]> = await fetch(
 		installURL + "srcFiles.json"
 	).then(r => r.json())
-	// console.log(files)
+	
 	for (const p in dirs) {
 		await Deno.mkdir(installDirPath + p, { recursive: true })
 		for (const f of dirs[p]) {

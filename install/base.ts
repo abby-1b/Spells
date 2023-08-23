@@ -1,4 +1,7 @@
 
+// Check if the install OS is Windows
+const IS_WINDOWS = Deno.build.os == "windows"
+
 /** The install directory of `spl` */
 export const locationDir = "/usr/local/bin/"
 
@@ -6,17 +9,31 @@ export const locationDir = "/usr/local/bin/"
 export const locationFile = locationDir + "spl"
 
 /** The install path for the source files */
-export const installDirPath = Deno.env.get("HOME") + "/.spl/"
+export const installDirPath = Deno.env.get(IS_WINDOWS ? "USERPROFILE" : "HOME")!
+	.replace(/\\/g, "/") + "/.spl/"
 
 /** The install URL */
 export const installURL = "https://raw.githubusercontent.com/CodeIGuess/Spells/main/"
 
-const shellCodeBase = `#!/usr/bin/env bash\ndeno run -A &1src/spells.ts &2 "$@"`
+const shellCodeShebang = `#!/usr/bin/env bash\n`
+const shellCodeBase = `deno run -A &1src/spells.ts &2 "$@"`
 
 export type InstallMethod = "clone" | "noclone"
+
+/**
+ * Puts the directory in the PATH. This should work on MacOS and Windows, Unix
+ * distros are untested.
+ * @param srcLocation The location of the installed directory
+ * @param method The method of installation (either "clone" or "noclone")
+ */
 export async function install(srcLocation: string, method: InstallMethod) {
+	if (IS_WINDOWS) {
+		// We're running on Windows, so run the specialized ✨Windows Function✨
+		return installWindows(srcLocation, method)
+	}
+
 	// Generate the `spl` file
-	const shellCode = shellCodeBase
+	const shellCode = shellCodeShebang + shellCodeBase
 		.replace("&1", srcLocation)
 		.replace("&2", method) // Pass the method of install
 
@@ -41,6 +58,29 @@ export async function install(srcLocation: string, method: InstallMethod) {
 	} catch (e) {
 		showError(e)
 	}
+}
+
+async function installWindows(srcLocation: string, method: InstallMethod) {
+	const replacedShellCodeBase = shellCodeBase
+		.replace("&1", srcLocation)
+		.replace("&2", method) // Pass the method of install
+	
+	await Deno.writeTextFile(
+		srcLocation + "spl",
+		replacedShellCodeBase
+	)
+
+	// Add it to the CMD PATH...
+	await new Deno.Command("setx", { args: [
+		"/M", "path", "%path%;" + srcLocation
+	] }).output()
+
+	// Add it to the PowerShell profile (env? basically?)
+	new Deno.Command("powershell", { args: [
+		"-NonInteractive",
+		"-Command",
+		"Add-Content $PROFILE \"`nfunction spl{param([string]$ScriptPath,[string[]]$ScriptArgs)&" + replacedShellCodeBase + "}\""
+	] })
 }
 
 export async function tryElseErrSudo<T>(f: () => Promise<T>): Promise<T | undefined> {
