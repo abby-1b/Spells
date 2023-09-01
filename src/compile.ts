@@ -2,8 +2,6 @@ import { error, errorNoExit } from "./logging.ts"
 import { markDownToHtml } from "./mdc.ts"
 import { pathGoUp, readTextFileSync } from "./path.ts"
 
-// TODO: implement variables (including dynamics!)
-
 // This is here to at least throw *something* before the real SWC transformer
 // is loaded. Sure, it'll likely error on the output file, but in the
 // off-chance that the user really wrote normal JavaScript, this'll work.
@@ -14,8 +12,13 @@ import { pathGoUp, readTextFileSync } from "./path.ts"
  * @param minify Whether or not to minify
  * @returns The outputted JavaScript code
  */
-// deno-lint-ignore no-unused-vars
-export let compileTS = (source: string, fileName?: string, minify?: boolean): string => source
+export let compileTS = (
+	source: string,
+	// deno-lint-ignore no-unused-vars
+	fileName?: string,
+	// deno-lint-ignore no-unused-vars
+	minify?: boolean
+): string => source
 
 let startedTSServer = 0 // 0: not started, 1: starting, 2: started
 /** Starts the TypeScript compilation server */
@@ -31,7 +34,8 @@ export async function startTSServer() {
 
 	// If this is the first time we're starting it, let the others know
 	startedTSServer = 1
-	const innerTransform = (await import("https://deno.land/x/swc@0.2.1/mod.ts")).transform
+	const innerTransform =
+		(await import("https://deno.land/x/swc@0.2.1/mod.ts")).transform
 	startedTSServer = 2
 	console.log("TypeScript compiler loaded!")
 	compileTS = (source: string, fileName?: string, minify?: boolean) => {
@@ -70,7 +74,8 @@ export async function startTSServer() {
 					}
 				} : {}
 			},
-			sourceMaps: !!fileName, // Only include source maps if a filename is given
+			// Only include source maps if a filename is given
+			sourceMaps: !!fileName,
 			minify
 		})
 
@@ -160,7 +165,10 @@ function splitModifiers(attr: string): string[] {
 	return modifiers
 }
 
-function replaceVariables(inputString: string, varDict: Record<string, string>): string {
+function replaceVariables(
+	inputString: string,
+	varDict: Record<string, string>
+): string {
 	const ret = inputString.replace(/@{[a-zA-Z0-9_\-@]*?}/g, e => {
 		const varName = e.slice(2, -1)
 		if (!(varName in varDict)) return e
@@ -285,7 +293,8 @@ export function parse(
 		// Finally, push the element!
 		els.push({
 			tagName, attrs,
-			clss: things.filter(t => t[0] == "." && t.length > 1).map(c => c.slice(1)),
+			clss: things
+				.filter(t => t[0] == "." && t.length > 1).map(c => c.slice(1)),
 			id: things.filter(t => t[0] == "#")[0]?.slice(1),
 			innerText, children,
 			notMarkDown: tagNoMarkDown.includes(tagName),
@@ -304,7 +313,11 @@ export function parse(
  * @param indent The current level of indentation
  * @returns The generated string of HTML code
  */
-function gen(els: Element[], indent = 0, variables: Record<string, string>): string {
+function gen(
+	els: Element[],
+	indent = 0,
+	variables: Record<string, string>
+): string {
 	let out = "", i = 0
 	for (const e of els) {
 		out += (i++ == 0 ? "<" : "\n<") + e.tagName // Tag beginning
@@ -312,7 +325,9 @@ function gen(els: Element[], indent = 0, variables: Record<string, string>): str
 		// Append attributes
 		if (e.attrs && Object.keys(e.attrs).length > 0)
 			out += " " + Object.entries(e.attrs)
-				.map(n => n[0] + (n[1] ? "=" + n[1] : ""))
+				.map(n => n[0] + (
+					n[1] ? "=" + replaceVariables(n[1], variables) : ""
+				))
 				.join(" ")
 
 		// Append id & class
@@ -333,8 +348,9 @@ function gen(els: Element[], indent = 0, variables: Record<string, string>): str
 					+ (isTooLong ? "\n" : "")
 		}
 		if (e.children && e.children.length > 0)
-			out += "\n\t" + gen(e.children, indent + 1, { ...variables, ...e.attrs })
-				.split("\n").join("\n\t")
+			out += "\n\t"
+				+ gen(e.children, indent + 1, { ...variables, ...e.attrs })
+					.split("\n").join("\n\t")
 				+ "\n"
 
 		// Append closing tag
@@ -383,7 +399,9 @@ function crawl(
 			// TODO: import HTML too
 
 			if (!el.innerText) error("Please provide a file to import")
-			const code = readTextFileSync(pathGoUp(options.filePath) + "/" + el.innerText!)
+			const code = readTextFileSync(
+				pathGoUp(options.filePath) + "/" + el.innerText!
+			)
 			const parsed = parse(code)[0]
 			els.splice(e, 1, ...parsed)
 			el = els[e]
@@ -413,7 +431,12 @@ function crawl(
 				singleTag: c.singleTag,
 				multiline: c.multiline
 			}
-			const crawlResults = crawl(nel.children!, components, false, options)
+			const crawlResults = crawl(
+				nel.children!,
+				components,
+				false,
+				options
+			)
 			tsSources.push(...crawlResults.tsSources)
 			headElements.push(...crawlResults.headElements)
 			els[e] = nel
@@ -512,7 +535,10 @@ function modify(els: Element[], options: CompileOptions) {
 	// <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	headTag.children!.push({
 		tagName: "meta",
-		attrs: {name: '"viewport"', content: '"width=device-width,initial-scale=1.0"'}
+		attrs: {
+			name: '"viewport"',
+			content: '"width=device-width,initial-scale=1.0"'
+		}
 	})
 
 	const components = {}

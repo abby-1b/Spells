@@ -11,7 +11,7 @@ import { InstallMethod } from "../install/base.ts"
  * The compiler version (1st) changes when there's any API breaking changes.
  * The 'build' number (2nd) changes whenever anything new is added.
  */
-export const VERSION = "1.5"
+export const VERSION = "1.6"
 
 const COMMANDS: { [key: string]: string[] } = {
 	"help, h, (empty)": [ "Shows this dialogue" ],
@@ -105,11 +105,21 @@ if (args.length == 0 || args[0][0] == "h") {
 			} else if (to.endsWith(".spl")) {
 				// Compile .spl files
 				const d = await readTextFile(from)
-				await Deno.writeTextFile(to.replace(/\.spl$/, ".html"), compile(d, { convertJStoTS: true, filePath: from }))
+				await Deno.writeTextFile(
+					to.replace(/\.spl$/, ".html"),
+					compile(d, { convertJStoTS: true, filePath: from })
+				)
 			} else if (to.endsWith(".ts")) {
 				// Compile .ts files
 				const d = await readTextFile(from)
-				await Deno.writeTextFile(to.replace(/\.ts$/, ".js"), compileTS(d, final ? undefined : from.split("/").slice(-1)[0], final))
+				await Deno.writeTextFile(
+					to.replace(/\.ts$/, ".js"),
+					compileTS(
+						d,
+						final ? undefined : from.split("/").slice(-1)[0],
+						final
+					)
+				)
 			} else {
 				// Else, just copy the file
 				Deno.copyFile(from, to)
