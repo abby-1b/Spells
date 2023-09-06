@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-explicit-any
+
 // This is here exclusively because I LOVE colored error/warning messages.
 // Can't live without 'em. I thought this would be a great place to use Deno's
 // built-in CSS syntax for highlighting, just like in the browser!

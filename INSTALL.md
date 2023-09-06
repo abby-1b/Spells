@@ -12,7 +12,7 @@ deno --version
 
 Then, run the following command to install the library:
 ```
-sudo deno run -A https://raw.githubusercontent.com/abby-1b/Spells/main/install/noClone.ts
+sudo deno run -A https://raw.githubusercontent.com/abby-1b/Spells/main/install/no-clone.ts
 ```
 
 # If you've already cloned the repository

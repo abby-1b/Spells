@@ -1,6 +1,6 @@
 head
 	title Spells
-	script(src="script.ts")
+	script(src="./test/nice.ts")
 	meta(property="og:title", content="Spells!")
 	link(rel="icon", type="image/png", href="./assets/icon.png")
 	meta(

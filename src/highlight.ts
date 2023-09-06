@@ -1,4 +1,4 @@
-import { Element, parse } from "./compile.ts"
+import { Element, parse } from "./compile/parse.ts"
 import { errorNoExit } from "./logging.ts"
 import { readTextFileSync } from "./path.ts"
 
@@ -66,7 +66,9 @@ function genHighlights(elements: Element[], indent = 0): string {
  */
 export function syntaxHighlight(code: string): string {
 	try {
-		const parsed = parse(code)[0]
+		const parsed = parse(code, {
+			filePath: "./"
+		})[0]
 		return genHighlights(parsed)
 	} catch (e) {
 		errorNoExit("Tried highlighting:\n" + code)

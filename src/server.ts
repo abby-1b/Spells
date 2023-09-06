@@ -1,8 +1,9 @@
 import { extname } from "https://deno.land/std@0.165.0/path/mod.ts"
 import { contentType } from "https://deno.land/std@0.177.0/media_types/mod.ts"
-import { compile, compileTS, startTSServer } from "./compile.ts"
+import { compile } from "./compile/compile.ts"
+import { compileTS, startTSServer } from "./compile/ts-server.ts";
 
-const FAVICON = 'AAABAAEAEB%4 EAIABoBAAAFgAAACg%4 Q%4 I%5 EAI%9 Q%1p gDZgKIA1YBg%11 /2y+z/9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+x/9svv+ANWAY%a D/bL7//22/r/9svv//bL7//2y+//9svv//bb+//2y+/w%a gDZfOP9svv//bL7H/2y+/w%4 D/bL7//2/APw%a /2y+//9svv8%a P9sv3f/bL7/%5 P9svv//bL6v%5 P9svv+ANl84/2y+/w%a /2y+//9wvxj/cL8g/2y+/w%a /2y+/w%4 D/bL7/%a D/bL+f/2y+//9svsc%5 /22+7/9svvc%a P9svv//bL7f%5 P9svuf/bL7//22/bw%f P9svv//bL7/%5 P9svv8%l /2y+/w%4 D/bL7//2y+/w%k D/b79//2y+//9svv//bL7//26/Zw%a /26/b/9svv//bL7//2y+/4A3X28%q P9svv+AOGAQ/2y+//9svv//bL7//2y+//9svv//bL7/%5 P9svv8%v D/bb7v/2y+//9svv8%l /2y+//9svv//bb7H%11 P9svv//bL7//2y+xw%a /2y+1/9svv//bL+f%1c /2y+//9svv//bL7//2y+//9svuf/bL7/%1h P9svY//bL7/%a D/bL7//2y/fw%1m /2y+//9tvt//bL7v/2y+/w%1w D/bL7//2y+/w%3e //8%7 BwDgAALnQAAK21AACJkwAAy9MAAOPHAADoFwAA48cAAPGPAAD4HwAA+b8AAPw/AAD+fwAA//8AAA=='.replace(/%.*? /g, e => "A".repeat(parseInt(e.slice(1, -1), 36)))
+// const FAVICON = 'AAABAAEAEB%4 EAIABoBAAAFgAAACg%4 Q%4 I%5 EAI%9 Q%1p gDZgKIA1YBg%11 /2y+z/9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+//9svv//bL7//2y+x/9svv+ANWAY%a D/bL7//22/r/9svv//bL7//2y+//9svv//bb+//2y+/w%a gDZfOP9svv//bL7H/2y+/w%4 D/bL7//2/APw%a /2y+//9svv8%a P9sv3f/bL7/%5 P9svv//bL6v%5 P9svv+ANl84/2y+/w%a /2y+//9wvxj/cL8g/2y+/w%a /2y+/w%4 D/bL7/%a D/bL+f/2y+//9svsc%5 /22+7/9svvc%a P9svv//bL7f%5 P9svuf/bL7//22/bw%f P9svv//bL7/%5 P9svv8%l /2y+/w%4 D/bL7//2y+/w%k D/b79//2y+//9svv//bL7//26/Zw%a /26/b/9svv//bL7//2y+/4A3X28%q P9svv+AOGAQ/2y+//9svv//bL7//2y+//9svv//bL7/%5 P9svv8%v D/bb7v/2y+//9svv8%l /2y+//9svv//bb7H%11 P9svv//bL7//2y+xw%a /2y+1/9svv//bL+f%1c /2y+//9svv//bL7//2y+//9svuf/bL7/%1h P9svY//bL7/%a D/bL7//2y/fw%1m /2y+//9tvt//bL7v/2y+/w%1w D/bL7//2y+/w%3e //8%7 BwDgAALnQAAK21AACJkwAAy9MAAOPHAADoFwAA48cAAPGPAAD4HwAA+b8AAPw/AAD+fwAA//8AAA=='.replace(/%.*? /g, e => "A".repeat(parseInt(e.slice(1, -1), 36)))
 
 /** Text to be served, which overrides file access. */
 export const serveText: {
@@ -88,11 +89,11 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 
 		if (path.endsWith("spl")) {
 			// Replace .spl files with compiled HTML
-			file = compile(new TextDecoder().decode(file), { filePath: path })
+			file = await compile(new TextDecoder().decode(file), { filePath: path })
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
 			// Replace .ts files with JavaScript
-			file = compileTS(new TextDecoder().decode(file), fullPath)
+			file = await compileTS(new TextDecoder().decode(file), fullPath)
 		}
 
 		// Send the file over
@@ -202,7 +203,7 @@ export async function startServer(options: ServerOptions) {
 // Start if this isn't an import
 if (import.meta.main) {
 	startServer({ port: 8081, routes: [
-		SimpleRoute("someApi", req => {
+		SimpleRoute("someApi", _ => {
 			const headers = new Headers()
 			headers.set("Content-Type", "text/json")
 			return new Response(
