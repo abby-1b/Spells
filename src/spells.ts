@@ -4,10 +4,6 @@ import { compile } from "./compile/compile.ts"
 import { logStyle, warning } from "./logging.ts"
 import { pathGoUp, readTextFile, readTextFileSync } from "./path.ts"
 
-import { update } from "../install/upgrade.ts"
-import { remove } from "../install/remove.ts"
-import { InstallMethod } from "../install/base.ts"
-
 /**
  * The compiler version (1st) changes when there's any API breaking changes.
  * The 'build' number (2nd) changes whenever anything new is added.
@@ -30,20 +26,11 @@ const COMMANDS: { [key: string]: string[] } = {
 	"build, b  buildDir  outDir [--final]": [
 		"Builds the site to vanilla HTML and JS.",
 		"final: minifies before exporting, removing source maps and minifying variable names."
-	],
-
-	"upgrade, u": [
-		"Upgrades spl to the latest version."
-	],
-
-	"remove, rm, r": [
-		"Deletes spl"
 	]
 }
 
 /** The passed arguments. */
 const args = [...Deno.args]
-const installMode = args.shift()! as InstallMethod
 
 async function getFiles(path: string) {
 	if (!path.endsWith("/")) path += "/"
@@ -129,8 +116,6 @@ if (args.length == 0 || args[0][0] == "h") {
 			}
 		}
 	}
-} else if (args[0][0] == "u") {
-	await update(installMode, VERSION)
-} else if (args[0][0] == "r") {
-	await remove(installMode)
+} else {
+	logStyle("color: red", "Unknown argument:", args[0])
 }
