@@ -1,10 +1,6 @@
 
 # Installation instructions
 
-**Important:** This is a Linux/MacOS only library.
-The installer will not work on Windows!
-_We're working on making the library platform-independent._
-
 First, [make sure you've got Deno installed](https://deno.land/manual@v1.31.1/getting_started/installation):
 ```
 deno --version
@@ -12,20 +8,20 @@ deno --version
 
 Then, run the following command to install the library:
 ```
-sudo deno run -A https://raw.githubusercontent.com/abby-1b/Spells/main/install/no-clone.ts
+deno install -A -n spl https://raw.githubusercontent.com/abby-1b/Spells/main/src/spells.ts
 ```
+
+Then, if prompted, add the given repository to your PATH.
 
 # If you've already cloned the repository
 
-First, enter the cloned repo:
+If you've already cloned the repository, then run the following command (from
+the root of the repo):
 ```
-cd Spells
-```
-
-Then, run the following to install the library:
-```
-sudo deno run -A install/fromClone.ts
+deno install -A -n spl ./src/spells.ts
 ```
 
-Keep in mind that moving the cloned repo anywhere will break the executable's functioning.
+Then, if prompted, add the given repository to your PATH.
 
+Keep in mind that moving the cloned repo will make the `spl` command stop
+working!
