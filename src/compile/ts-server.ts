@@ -43,7 +43,11 @@ export async function startTSServer() {
 		const ret = innerTransform(source, {
 			jsc: {
 				target: "es2022",
-				parser: { syntax: "typescript", tsx: true },
+				parser: {
+					syntax: "typescript",
+					tsx: true,
+					dynamicImport: true
+				},
 				minify: minify ? {
 					compress: {
 						arguments: true,
