@@ -93,7 +93,10 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 			sct = "text/html"
 		} else if (path.endsWith(".ts")) {
 			// Replace .ts files with JavaScript
-			file = await compileTS(new TextDecoder().decode(file), fullPath)
+			file = await compileTS(
+				new TextDecoder().decode(file),
+				fullPath
+			)
 		}
 
 		// Send the file over
