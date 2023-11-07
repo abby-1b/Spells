@@ -97,7 +97,7 @@ if (args.length == 0 || args[0][0] == "h") {
 				const d = await readTextFile(from)
 				await Deno.writeTextFile(
 					to.replace(/\.spl$/, ".html"),
-					await compile(d, { convertJStoTS: true, filePath: from })
+					await compile(d, { convertExtensionTStoJS: true, filePath: from })
 				)
 			} else if (to.endsWith(".ts")) {
 				// Compile .ts files

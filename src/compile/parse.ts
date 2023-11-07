@@ -7,7 +7,7 @@ import { linkAttributes, tagNoMarkDown, tagSingle } from "./special-tags.ts"
 export interface Element {
 	tagName: string
 	file: string
-	attrs?: { [key: string]: string }
+	attrs?: Record<string, string>
 	clss?: string[]
 	id?: string
 	innerText?: string

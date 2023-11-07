@@ -62,7 +62,7 @@ async function crawl(
 			const finalPath = pathGoUp(el.file) + "/" + el.innerText!
 			const code = readTextFileSync(finalPath)
 			const parsed = parse(code, {
-				convertJStoTS: compileOptions.convertJStoTS,
+				convertExtensionTStoJS: compileOptions.convertExtensionTStoJS,
 				filePath: finalPath,
 				mapPaths: compileOptions.mapPaths ?? compileOptions.filePath
 			})[0]
@@ -113,8 +113,8 @@ async function crawl(
 			}
 		} else if (el.tagName == "script") {
 			if (el.attrs && "src" in el.attrs) {
-				if (compileOptions.convertJStoTS) {
-					// Replace .js with .ts
+				if (compileOptions.convertExtensionTStoJS) {
+					// Replace .ts with .js
 					if (el.attrs.src.endsWith(".ts"))
 						el.attrs.src = el.attrs.src.slice(0, -2) + "js"
 					else if (el.attrs.src.endsWith(".ts\""))
@@ -159,13 +159,21 @@ async function crawl(
  * sources found within the structure
  */
 let headTag: Element
-async function modify(
+export async function modify(
 	els: Element[],
 	compileOptions: CompileOptions
 ): Promise<{
 	els: Element[],
 	tsSources: string[]
 }> {
+	/**
+	 * Checks if a tag exists in the children of an element. The tag has to be a
+	 * direct child of the searched element, so a tag that is nested within
+	 * another element will not be counted!
+	 * @param el The element to be searched
+	 * @param searchTag The name of the tag to search (eg. "div", "head", etc.)
+	 * @returns Whether or not the tag exists within the element
+	 */
 	const hasTag = (el: Element, searchTag: string): boolean =>
 		el.children ? !!el.children.find(e => e.tagName == searchTag) : false
 
@@ -176,22 +184,26 @@ async function modify(
 		// Add <html> around everything
 		htmlTag = {
 			tagName: "html",
-			children: els
-		} as Element
+			children: els,
+			file: compileOptions.filePath
+		}
 		els = [ htmlTag ]
-	} else htmlTag = els[topTags.indexOf("html")]
+	} else {
+		htmlTag = els[topTags.indexOf("html")]
+	}
+
 	if (!hasTag(htmlTag, "body")) {
 		// Add <body> around everything after <head>
 		const headIdx = htmlTag.children!.findIndex(c => c.tagName == "head")
 		if (headIdx == -1) {
-			// Make the head element
+			// If the `head` element doesn't exist, make it
 			headTag = {
 				tagName: "head",
 				file: compileOptions.filePath,
 				children: []
 			}
 		} else {
-			// Get the head element
+			// If `head` DOES exist, get it
 			headTag = htmlTag.children![headIdx]
 			htmlTag.children!.splice(headIdx, 1)
 		}
@@ -202,9 +214,9 @@ async function modify(
 		}]
 	} else {
 		// Just the head element
-		if (hasTag(htmlTag, "head"))
+		if (hasTag(htmlTag, "head")) {
 			headTag = htmlTag.children!.find(t => t.tagName == "head")!
-		else {
+		} else {
 			headTag = {
 				tagName: "head",
 				file: compileOptions.filePath,
@@ -236,8 +248,9 @@ async function modify(
 	// Add <!DOCTYPE html> at the beginning of the document
 	els.unshift({
 		tagName: "!DOCTYPE html",
-		singleTag: true
-	} as Element)
+		singleTag: true,
+		file: compileOptions.filePath
+	})
 
 	return {
 		els,
