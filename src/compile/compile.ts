@@ -158,7 +158,7 @@ async function crawl(
  * @returns An object with the elements in order, and a list of the TypeScript
  * sources found within the structure
  */
-let headTag: Element
+// let headTag: Element
 export async function modify(
 	els: Element[],
 	compileOptions: CompileOptions
@@ -178,7 +178,7 @@ export async function modify(
 		el.children ? !!el.children.find(e => e.tagName == searchTag) : false
 
 	let htmlTag: Element
-	headTag = undefined as unknown as Element
+	let headTag = undefined as unknown as Element
 	const topTags = els.map(e => e.tagName)
 	if (!topTags.includes("html")) {
 		// Add <html> around everything
@@ -243,7 +243,10 @@ export async function modify(
 	const crawlResults = await crawl(els, {}, false, compileOptions)
 	headTag.children!.push(...crawlResults.headElements)
 
-	htmlTag.children!.unshift(headTag)
+	// If the head tag isn't already in the HTML, add it!
+	if (!hasTag(htmlTag, "head")) {
+		htmlTag.children!.unshift(headTag)
+	}
 
 	// Add <!DOCTYPE html> at the beginning of the document
 	els.unshift({
