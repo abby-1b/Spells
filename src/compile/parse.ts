@@ -84,17 +84,35 @@ export function parse(
 		tagName = "",
 		i = startI
 	for (; i < code.length; i++) {
-		const c = code[i]
-		if (nameChars.includes(c)) {
+		const c = code[i] // Get the character we're on
+
+		// If the character is a "tag name character", add it to the tag name
+		if (nameChars.includes(c) || c == '/') {
 			tagName += c
+			continue
+		}
+		
+		if (tagName.startsWith("//")) {
+			// Deal with comments
+			if (c == '\n') {
+				// If thre's a newline, stop the comment
+				tagName = ""
+				tagIndent = 0
+			}
 			continue
 		}
 
 		// If a tab is found, increase the indent level
-		if (c == "\t") tagIndent++
+		if (c == '\t') tagIndent++
 		
-		// If there's no tag (so just a tab), don't let the code below run.
-		if (tagName.length == 0) continue
+		if (tagName.length == 0) {
+			// If there's no tag (so just a tab), don't let the code below run
+			if (c == '\n') {
+				// If thre's a newline and no tag, reset the indentation
+				tagIndent = 0
+			}
+			continue
+		}
 
 		/// ONCE WE HAVE A TAG,
 
