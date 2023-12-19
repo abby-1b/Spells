@@ -6,15 +6,21 @@ should work.
 
 ```pug
 @import some.spl
+@imports some.spl
 @require some.spl
-@include some.spl
 @requires some.spl
+@include some.spl
 @includes some.spl
+@need some.spl
 @needs some.spl
+@want some.spl
 @wants some.spl
+@desire some.spl
 @desires some.spl
+@necessitate some.spl
 @necessitates some.spl
 @steal-code-from some.spl
+@steals-code-from some.spl
 ```
 
 All of these work.
