@@ -20,7 +20,9 @@ export const tagHead = [
  * NOTE: Adding Text to any of these tags makes them still have a closing tag.
  */
 export const tagSingle = [
-	"meta"
+	"meta",
+	"wbr",
+	"br"
 ]
 
 /**

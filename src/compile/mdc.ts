@@ -12,9 +12,9 @@ export function markDownToHtml(md: string): string {
 	return md
 
 	// Replace everything that could affect the html things!
-		.replace(`&`, "&amp;")
-		.replace(`<`, "&lt;")
-		.replace(`>`, "&gt;")
+		// .replace(`&`, "&amp;")
+		// .replace(`<`, "&lt;")
+		// .replace(`>`, "&gt;")
 		// .replace(`"`, "&quot;")
 		// .replace(`'`, "&#039;")
 

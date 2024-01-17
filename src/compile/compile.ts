@@ -1,7 +1,7 @@
 import { CompileOptions } from "./compile-options.ts"
 
 import { error, errorNoExit } from "../logging.ts"
-import { pathGoUp, readTextFileSync } from "../path.ts"
+import { pathGoUp, readTextFile } from "../path.ts"
 
 import { markDownToHtml } from "./mdc.ts"
 import { Element, parse } from "./parse.ts"
@@ -24,7 +24,7 @@ const acceptedImportTags = [
 	"@necessitate",
 	"@necessitates",
 	"@steal-code-from",
-	"@steals-code-from"
+	"@steals-code-from",
 ]
 
 /**
@@ -60,7 +60,7 @@ async function crawl(
 
 			if (!el.innerText) error("Please provide a file to import")
 			const finalPath = pathGoUp(el.file) + "/" + el.innerText!
-			const code = readTextFileSync(finalPath)
+			const code = await readTextFile(finalPath)
 			const parsed = parse(code, {
 				convertExtensionTStoJS: compileOptions.convertExtensionTStoJS,
 				filePath: finalPath,
@@ -363,7 +363,7 @@ export async function compile(
 // Run a simple test if this is ran standalone
 if (import.meta.main) {
 	const path = "test/index.spl"
-	const f = readTextFileSync(path)
+	const f = await readTextFile(path)
 	const out = compile(f, { filePath: path })
 	console.log(out)
 }
