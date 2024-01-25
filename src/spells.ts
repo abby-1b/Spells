@@ -33,14 +33,14 @@ const COMMANDS: { [key: string]: string[] } = {
 const args = [...Deno.args]
 
 async function getFiles(path: string) {
-	if (!path.endsWith("/")) path += "/"
-	const ret: string[] = []
+	if (!path.endsWith("/")) path += "/";
+	const ret: { path: string, isDir: boolean }[] = [];
 	for (const f of Deno.readDirSync(path)) {
 		if (f.isFile) {
-			ret.push(path + f.name)
+			ret.push({ path: path + f.name, isDir: false });
 		} else {
-			ret.push(path + f.name)
-			ret.push(...await getFiles(path + f.name))
+			ret.push({ path: path + f.name, isDir: true });
+			ret.push(...await getFiles(path + f.name));
 		}
 	}
 	return ret
@@ -79,40 +79,46 @@ if (args.length == 0 || args[0][0] == "h") {
 		
 		// Get the files
 		const buildFiles = await getFiles(buildDir)
-		if (buildFiles.map(e => e.endsWith(".ts")).includes(true))
-			await startTSServer()
 
-		// Remove the output directory (if it exists)
+		// If there's a TypeScript file, start the TypeScript server preemptively
+		if (buildFiles.map(e => e.path.endsWith(".ts") && !e.isDir).includes(true)) {
+			startTSServer()
+		}
+
+		// Empty the output directory
 		try { await Deno.remove(outDir, { recursive: true }) } catch { 0 }
 		await Deno.mkdir(outDir)
 
 		// One by one, output the files. Compile them is necessary.
 		for (const from of buildFiles) {
-			const to = outDir + "/" + from.split("/").slice(1).join("/")
-			if (!to.includes(".")) {
+			const to = outDir + "/" + from.path.split("/").slice(1).join("/");
+			if (from.isDir) {
 				// Make a directory
-				await Deno.mkdir(to)
+				await Deno.mkdir(to);
 			} else if (to.endsWith(".spl")) {
 				// Compile .spl files
-				const d = await readTextFile(from)
+				const d = await readTextFile(from.path);
 				await Deno.writeTextFile(
 					to.replace(/\.spl$/, ".html"),
-					await compile(d, { convertExtensionTStoJS: true, filePath: from })
-				)
+					await compile(d, {
+						convertExtensionTStoJS: true,
+						filePath: from.path
+					})
+				);
 			} else if (to.endsWith(".ts")) {
 				// Compile .ts files
-				const d = await readTextFile(from)
+				const d = await readTextFile(from.path);
 				await Deno.writeTextFile(
 					to.replace(/\.ts$/, ".js"),
 					await compileTS(
 						d,
-						final ? undefined : from.split("/").slice(-1)[0],
+						final ? undefined : from.path.split("/").slice(-1)[0],
 						final
 					)
-				)
+				);
 			} else {
 				// Else, just copy the file
-				Deno.copyFile(from, to)
+				Deno.copyFile(from.path, to)
 			}
 		}
 	}

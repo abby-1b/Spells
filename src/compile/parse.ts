@@ -78,7 +78,22 @@ export function parse(
 	startI = 0,
 	parentVariables?: Record<string, string>,
 ): [ Element[], number ] {
-	code = (code + "\n").replace(/\G {4}/g, "\t")
+	// Properly indent the code
+	if (!code.includes("\t")) {
+		// Get the indent size
+		let indentSize = 4; // Default to 4
+		for (const line of code.split("\n")) {
+			const m = line.match(/[^ ]/);
+			if (m && m.index != 0) {
+				indentSize = m.index!;
+				break;
+			}
+		}
+		const r = new RegExp(`^(${' '.repeat(indentSize)}){1,}`, "gm");
+		console.log(r);
+		code = (code + "\n").replace(r, e => "\t".repeat(e.length / indentSize));
+	}
+
 	const els: Element[] = []
 	let tagIndent = 0,
 		tagName = "",

@@ -117,33 +117,37 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 
 /** Handles a single connection to the server */
 async function handleConnection(conn: Deno.Conn, opts: ServerOptions) {
-	const httpConn = Deno.serveHttp(conn)
-	for await (const requestEvent of httpConn) {
-		// Craft the SpellsRequest object
-		const { request } = requestEvent
-			, url = new URL(request.url)
-			, path = url.pathname.substring(1)
-			, args: Record<string, string> = {}
-		for (const [key, value] of url.searchParams.entries())
-			args[key] = value
-		const splReq: SpellsRequest = {
-			url: request.url, args,
-			path: url.pathname.substring(1)
-		}
+	const httpConn = Deno.serveHttp(conn);
+	try {
+		for await (const requestEvent of httpConn) {
+			// Craft the SpellsRequest object
+			const { request } = requestEvent
+				, url = new URL(request.url)
+				, path = url.pathname.substring(1)
+				, args: Record<string, string> = {}
+			for (const [key, value] of url.searchParams.entries())
+				args[key] = value
+			const splReq: SpellsRequest = {
+				url: request.url, args,
+				path: url.pathname.substring(1)
+			}
 
-		// Check through the routes...
-		let tookRoute = false
-		for (const r of opts.routes ?? []) {
-			if (!await r.capture(splReq)) continue
-			// A route was found! Send its output to the client
-			requestEvent.respondWith(await r.routingFn(splReq, opts))
-			tookRoute = true
-			break
-		}
-		if (tookRoute) continue
+			// Check through the routes...
+			let tookRoute = false
+			for (const r of opts.routes ?? []) {
+				if (!await r.capture(splReq)) continue
+				// A route was found! Send its output to the client
+				requestEvent.respondWith(await r.routingFn(splReq, opts))
+				tookRoute = true
+				break
+			}
+			if (tookRoute) continue
 
-		// If no suitable route was found, use the default function
-		requestEvent.respondWith(handleRequest(path, request.url, opts.silent))
+			// If no suitable route was found, use the default function
+			requestEvent.respondWith(handleRequest(path, request.url, opts.silent))
+		}
+	} catch {
+		// Connection was ended!
 	}
 }
 
