@@ -1,4 +1,6 @@
 .DS_Store
 **/.vscode
+**/.vscode/**
 **/.DS_Store
 test/free-test.ts
+**/node_modules

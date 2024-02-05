@@ -1,3 +1,6 @@
 {
-	"deno.enable": true
+  "deno.enable": true,
+  "workbench.iconTheme": "vs-seti",
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
 }

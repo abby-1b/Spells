@@ -7,7 +7,7 @@ most importantly: reusable.
 Components in Spells are defined with a `@`. For example:
 ```pug
 component-name(@)
-	p This text is inside the component!
+  p This text is inside the component!
 ```
 
 The first time you declare a component, it doesn't get added to the output HTML.
@@ -21,7 +21,7 @@ This will display the component wherever you've placed it. This is what the
 generated HTML will look like:
 ```html
 <div @ class="component-name">
-	<p>This text is inside the component!</p>
+  <p>This text is inside the component!</p>
 </div>
 ```
 
@@ -35,7 +35,7 @@ The following would be wrong:
 ```pug
 component(@)
 component(@)
-	p We're declaring the component after it's been used! This won't work.
+  p We're declaring the component after it's been used! This won't work.
 ```
 
 It's wrong because we're using the component (see the top declaration, the one

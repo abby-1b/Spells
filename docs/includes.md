@@ -33,15 +33,15 @@ Although discouraged, this can be used as an analogue to components.
 `pseudo-component.spl`
 ```pug
 div
-	p Please don't do this. Use components instead!
+  p Please don't do this. Use components instead!
 ```
 `index.spl`
 ```pug
 div
-	@import pseudo-component.spl
+  @import pseudo-component.spl
 div
-	p Please.
-	@import pseudo-component.spl
+  p Please.
+  @import pseudo-component.spl
 ```
 
 For now, these only works for Spells files, but importing HTML will be a feature

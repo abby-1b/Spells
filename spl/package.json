@@ -1,38 +1,38 @@
 {
-	"name": "spl",
-	"displayName": "Spells",
-	"description": "An amalgamation",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.76.0"
-	},
-	"categories": [
-		"Programming Languages"
-	],
-	"contributes": {
-		"languages": [
-			{
-				"id": "spl",
-				"aliases": [
-					"Spells",
-					"spl"
-				],
-				"extensions": [
-					".spl"
-				],
-				"configuration": "./language-configuration.json",
-				"icon": {
-					"dark": "./iconDark.png",
-					"light": "./iconLight.png"
-				}
-			}
-		],
-		"grammars": [
-			{
-				"language": "spl",
-				"scopeName": "source.spl",
-				"path": "./syntaxes/spl.tmLanguage.json"
-			}
-		]
-	}
+  "name": "spl",
+  "displayName": "Spells",
+  "description": "An amalgamation",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "spl",
+        "aliases": [
+          "Spells",
+          "spl"
+        ],
+        "extensions": [
+          ".spl"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "dark": "./iconDark.png",
+          "light": "./iconLight.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "spl",
+        "scopeName": "source.spl",
+        "path": "./syntaxes/spl.tmLanguage.json"
+      }
+    ]
+  }
 }

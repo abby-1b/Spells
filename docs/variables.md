@@ -7,13 +7,13 @@ children. To add a variable to an element, simply write the variable as an
 attribute of said element:
 ```pug
 some-element(name="Mary")
-	p Hello, @{name}!
+  p Hello, @{name}!
 ```
 
 Which would create the following HTML:
 ```html
 <some-element name="Mary">
-	<p>Hello, Mary!</p>
+  <p>Hello, Mary!</p>
 </some-element>
 ```
 
@@ -22,11 +22,11 @@ times in a div, you could extrapolate it into a variable:
 
 ```pug
 div(text="Hey there!")
-	p(style="margin-top:5px;color:#ddd") @{text}
-	p(style="margin-top:3px;color:#888") @{text}
-	p(style="margin-top:1px;color:#000") @{text}
+  p(style="margin-top:5px;color:#ddd") @{text}
+  p(style="margin-top:3px;color:#888") @{text}
+  p(style="margin-top:1px;color:#000") @{text}
 style.
-	div > p { margin: 0; position: absolute; font-size: 2em; }
+  div > p { margin: 0; position: absolute; font-size: 2em; }
 ```
 
 Keep in mind that changing the value of the attribute doesn't update the HTML!
@@ -42,13 +42,13 @@ To make an element's variables dynamic, simply add the `dynamic` attribute to
 said element:
 ```pug
 div(dynamic, name="Jane")#my-element
-	p Hello, @{name}!
+  p Hello, @{name}!
 ```
 
 Great! So far, this is pretty similar to before. This compiles to the following:
 ```html
 <div id="my-element" name="Jane">
-	<p>Hello, Jane!</p>
+  <p>Hello, Jane!</p>
 </div>
 ```
 
@@ -63,7 +63,7 @@ The JavaScript code above modifies the element, which refreshes its contents and
 ends up like this:
 ```html
 <div id="my-element" name="John F. Kennedy">
-	<p>Hello, John F. Kennedy!</p>
+  <p>Hello, John F. Kennedy!</p>
 </div>
 ```
 
