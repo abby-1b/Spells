@@ -104,9 +104,13 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
 		headers.set("Content-Type", sct)
 		return new Response(file, { headers })
 	} catch {
-		// Check if file exists as `.ts` instead of `.js`
-		if (path.endsWith(".js"))
+		if (path.match(/\/.[^.\/]+$/)) {
+			// Check if file is actually a js resource
+			return handleRequest(path + ".js", fullPath)
+		} else if (path.endsWith(".js")) {
+			// Check if file exists as `.ts` instead of `.js`
 			return handleRequest(path.slice(0, -3) + ".ts", fullPath)
+		}
 
 		if (!silent) console.log(" > 404")
 		return new Response("404: Not Found!", { status: 404 })
