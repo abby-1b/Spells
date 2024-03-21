@@ -90,7 +90,6 @@ export function parse(
       }
     }
     const r = new RegExp(`^(${' '.repeat(indentSize)}){1,}`, 'gm');
-    console.log(r);
     code = (code + '\n').replace(r, e => '\t'.repeat(e.length / indentSize));
   }
 
