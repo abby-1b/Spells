@@ -1,25 +1,89 @@
 ![Banner](./assets/banner.png)
 
-# **Spells**: A blazingly fast amalgamation of languages
+# **Spells**: A fast web development server
 
-Have you ever wanted to use a combination of JavaScript, TypeScript, MarkDown, and Pug/Jade to mash modules, semi-components, hopes, and dreams together into something barely representative of the Web Developer™ you really are, but in a fraction of the time it would take you to do the same thing in a sane matter, y'know, by _not_ mixing languages together?
+Spells is a tool that allows for quick iteration and development of web
+applications. It allows you to write a combination of JavaScript, TypeScript,
+HTML, Markdown, and Pug/Jade to develop websites much faster.
 
-Well, now you can!
+Spells' main feature is its web server. It allows you to write in all of these
+languages and quickly test everything in real time. To run the web server,
+simply run `spl s` (faster than writing `python3 -m http.server`, huh?)
 
-# Amalgamation
-_the action, process, or result of combining or uniting_
-<br>
-<br>
-
-Yeah, that's what happened here.
-
-As previously stated, this... thing™ mixes JavaScript, TypeScript, MarkDown, and Pug together in a decently cohesive way. Since Pug is already a compiled language, I just took the librety to compile more things while I'm at it!
-
-The compiler is able to convert any MarkDown left in the source into its HTML representation. The MarkDown here is a small subset of the [MarkDown spec](https://spec-md.com/).
-
-The thing™ also compiles Pug into HTML, with a few added features and a few removed features (most notably no variables or pipes, but support for reusable components)! The Pug compiler is also a subset of the [Pug spec](https://pugjs.org/language/attributes.html).
-
-Finally, any TypeScript found in script tags is compiled into plain JavaScript. This is not a subset, as I'd rather die than write my own TypeScript compiler.
 
 # Install
-Follow the instructions [here](./INSTALL.md) to install. Windows is currently unsupported, but Mac and Linux should work just fine.
+
+To install Spells, follow the instructions [here](./INSTALL.md). Windows is
+currently unsupported, but support is planned.
+
+
+# Design
+
+## Markup language
+
+Spells (the tool) comes with its own own language: Spells (the markup language).
+
+It's a subset of Pug/Jade, a language similar to VSCode's Emmet abbreviations.
+This greatly reduces the amount of code typed and overall looks less cluttered
+than pure HTML:
+
+```jade
+head
+  title My Website!
+  script(src="someScript.js")
+body
+  h1 This content is in one line...
+  h2.
+    This content can span
+    multiple lines!
+```
+
+
+## TypeScript
+
+The main design goal of this tool is to allow mixing different languages within
+the same project. You can, for example, put TypeScript inside your HTML script
+tags, which compiles down to its JavaScript equivalent:
+
+```jade
+script.
+  // No need for a type="TypeScript" specifier!
+  class SomeClass {
+    public foo: number;
+    private bar: string;
+  }
+  const a: Array<SomeClass> = [];
+  a.push(new SomeClass());
+```
+
+Alternatively, you can import TypeScript files directly:
+
+```pug filename="index.spl"
+script(src="someFile.ts")
+```
+
+```ts filename="someFile.ts"
+const a: number = 123;
+```
+
+This currently uses [Speedy Web Compiler](https://swc.rs/), a fast TypeScript
+compiler written in Rust. Optionally, there's support for my own compiler,
+[RSTSC](https://github.com/abby-1b/rstsc).
+
+## Markdown
+
+Markdown provides a simple way of styling text. When writing text in Spells, you
+can include markdown at any point, and it will be converted to its equivalent
+HTML when it's compiled:
+
+```jade
+h1.
+  You can *italicize* words, make them **bold**, or ***both***.
+```
+
+Which looks like the following:
+
+You can *italicize* words, make them **bold**, or ***both***.
+
+Do keep in mind that this is a subset of the [Markdown spec](https://spec-md.com/).
+

@@ -104,8 +104,8 @@ async function handleRequest(path: string, fullPath: string, silent?: boolean): 
     headers.set('Content-Type', sct);
     return new Response(file, { headers });
   } catch {
-    if (path.match(/\/.[^.\/]+$/)) {
-      // Check if file is actually a js resource
+    if (path.match(/\/.[^./]+$/) || !path.includes('.')) {
+      // Check if file is actually a js resource (when no file extension found)
       return handleRequest(path + '.js', fullPath);
     } else if (path.endsWith('.js')) {
       // Check if file exists as `.ts` instead of `.js`
