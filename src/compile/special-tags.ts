@@ -32,5 +32,5 @@ export const tagSingle = [
 export const linkAttributes = [
   /^src$/,
   /^href$/,
-  /^data\-/,
+  /^data-/,
 ];

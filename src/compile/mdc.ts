@@ -29,7 +29,7 @@ export function markDownToHtml(md: string): string {
     .replace(/^<li.*/gm, e => e + '</li>')
   
   // Links
-    .replace(/\[.*?]\(.*?\)/gm, e => `<a href=\"${e.split('](')[1].slice(0,-1)}\">${e.split('](')[0].slice(1)}</a>`)
+    .replace(/\[.*?]\(.*?\)/gm, e => `<a href="${e.split('](')[1].slice(0,-1)}">${e.split('](')[0].slice(1)}</a>`)
 
   // Bold, italics, combinations of <
     .replace(/\*\*[^*]*?\*\*/gm, e => '<b>' + e.slice(2, -2) + '</b>')
@@ -37,7 +37,7 @@ export function markDownToHtml(md: string): string {
     .replace(/_.*?_/gm, e => '<i>' + e.slice(1, -1) + '</i>')
   
   // Monospace (`like this`)
-    .replace(/\`[^\`]{1,}\`(?!`)/gm, e => '<code>' + e.slice(1, -1) + '</code>')
+    .replace(/`[^`]{1,}`(?!`)/gm, e => '<code>' + e.slice(1, -1) + '</code>')
     .replace(/```(.|\n)*?```/gm, e => '<br><code>' + e.slice(3, -3).replace(/\n/g, '<br>') + '</code>')
 
   // Superscript (x^this_is_sup)
@@ -50,7 +50,7 @@ export function markDownToHtml(md: string): string {
     .replace(/\n\n/gm, '\n<br>')
 
   // Removes some unused things
-    .replace(/\n\</g, '<')
+    .replace(/\n</g, '<')
     .replace(/>\n/g, '>')
   
   // Images

@@ -211,10 +211,10 @@ export async function startServer(options: ServerOptions) {
     handleConnection(conn, options);
 }
 
-// Start if this isn't an import
+// If we're calling this directly, start it up!
 if (import.meta.main) {
   startServer({ port: 8081, routes: [
-    SimpleRoute('someApi', _ => {
+    SimpleRoute('someApi', () => {
       const headers = new Headers();
       headers.set('Content-Type', 'text/json');
       return new Response(

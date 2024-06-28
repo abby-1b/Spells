@@ -59,7 +59,7 @@ async function crawl(
        */
 
       if (!el.innerText) error('Please provide a file to import');
-      const finalPath = '.' + pathGoUp(el.file) + '/' + el.innerText!;
+      const finalPath = './' + pathGoUp(el.file) + '/' + el.innerText!;
       const code = await readTextFile(finalPath);
       const parsed = parse(code, {
         convertExtensionTStoJS: compileOptions.convertExtensionTStoJS,

@@ -44,7 +44,7 @@ export async function startTSServer() {
       minify?: boolean
     ): Promise<string> => {
       const socketClient = new WebSocket('ws://localhost:7787', 'rust-websocket');
-      let ready: number = 0;
+      let ready = 0;
 
       socketClient.onopen = () => {
         console.log('Connected!');
@@ -127,7 +127,7 @@ export async function startTSServer() {
     // The inline sourceMaps are not good, so we inline it ourselves.
     if (fileName) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sourceMap = JSON.parse((ret as any).map);
+      const sourceMap = JSON.parse((ret as unknown as { map: string }).map);
       sourceMap.sources[0] = fileName;
       return ret.code + `\n//# sourceMappingURL=data:application/json;base64,${btoa(JSON.stringify(sourceMap))}`;
     }
