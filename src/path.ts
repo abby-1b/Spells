@@ -23,79 +23,71 @@ export function prettyPath(path: string) {
   let back = 0;
   for (const p of path.split('/')) {
     if (p == '..') {
-      if (finalSpl.length == 0) back++;
-      else finalSpl.pop();
+      // Go back
+      if (finalSpl.length == 0) {
+        // Can't go further back, so just add it at the start
+        back++;
+      } else {
+        // Pop from the path, going back
+        finalSpl.pop();
+      }
     } else if (p == '.' || p.length == 0) {
+      // Ignore this path part
       continue;
     } else {
+      // Push this part
       finalSpl.push(p);
     }
   }
 
-  return '../'.repeat(back) + finalSpl.join('/');
+  return (path[0] == '/' ? '/' : '') + '../'.repeat(back) + finalSpl.join('/');
 }
 
-// This was taken (and edited) from https://deno.land/std@0.201.0/path/mod.ts
-export function calcRelative(from: string, to: string) {
+export function calcRelative(from: string, to: string): string {
   from = prettyPath(from);
   to = prettyPath(to);
-  console.log('Calculating:', {from, to});
-  
+
+  // If the paths are equal, we're already there.
   if (from === to) return '';
   
-  const toLen = to.length;
-  
-  const length = from.length < toLen ? from.length : toLen;
-  let lastCommonSep = -1;
-  let i = 0;
-  for (; i <= length; i++) {
-    if (i === length) {
-      if (toLen > length) {
-        if (to[i] == '/') {
-          return to.slice(i + 1);
-        } else if (i === 0) {
-          return to.slice(i);
-        }
-      } else if (from.length > length) {
-        if (from[i] == '/') {
-          lastCommonSep = i;
-        } else if (i === 0) {
-          lastCommonSep = 0;
-        }
+  // Split the paths into their steps
+  const fromParts = from.split('/');
+  const toParts = to.split('/');
+
+  const outParts: string[] = [];
+
+  // Step 1: go to the common parent directory
+  for (;;) {
+    let isEqual = true;
+    for (let i = 0; i < fromParts.length; i++) {
+      if (toParts[i] != fromParts[i]) {
+        isEqual = false;
+        break;
       }
-      break;
     }
-    const fromCode = from[i];
-    const toCode = to[i];
-    if (fromCode !== toCode) break;
-    else if (fromCode == '/') lastCommonSep = i;
+    if (isEqual) break;
+
+    // Move back
+    fromParts.pop();
+    outParts.push('..');
   }
-  
-  let out = '';
-  for (i = lastCommonSep + 1; i <= from.length; i++) {
-    if (i === from.length || from[i] == '/') {
-      if (out.length === 0) out += '..';
-      else out += '/..';
-    }
+
+  // Step 2: go from there to the final path
+  for (let i = fromParts.length; i < toParts.length; i++) {
+    outParts.push(toParts[i]);
   }
-  
-  if (out.length > 0) {
-    return out + to.slice(lastCommonSep);
-  } else {
-    let toStart = lastCommonSep;
-    if (to[toStart] == '/') toStart++;
-    return to.slice(toStart);
-  }
+
+  return outParts.join('/');
 }
 
 // These are here for future compatibility!
 
 export function readTextFile(path: string) {
-  return Deno.readTextFile(path);
+  return Deno.readTextFile(prettyPath(path));
 }
 
 export function readTextFileSync(path: string) {
-  return Deno.readTextFileSync(path);
+  return Deno.readTextFileSync(prettyPath(path));
 }
 
 export async function readDir(path: string) {
