@@ -140,8 +140,8 @@ export function parse(
     // Get the things that are a part of the tag: class,
     // ID, and attributes. (+ the multi-line operator)
     let j = i, nest = 0;
-    while (true) {
-      if ((code[j] == '\n' || code[j] == ' ') && nest == 0) break;
+    for (;;) {
+      if ((code[j] == '\n' || code[j] == ' ' || j >= code.length) && nest == 0) break;
       if (code[j] == '(' || code[j] == '[' || code[j] == '{') nest++;
       else if (code[j] == ')' || code[j] == ']' || code[j] == '}') nest--;
       if (++j > code.length) error('Unmatched nest:', idxToPos(code, i));
@@ -173,10 +173,10 @@ export function parse(
       }
       if (curr.length > 0) appendAttributes.push(curr);
       
-      appendAttributes.forEach(n => {
-        const s = n.split('=')
-          , attr = s[0].trim();
-        let val = s.slice(1).join('=');
+      appendAttributes.forEach(attributeString => {
+        const attributeParts = attributeString.split('='),
+          attr = attributeParts[0].trim();
+        let val = attributeParts.slice(1).join('=');
 
         // Fix relative paths in imports
         // Hours spent here (including all the functions it calls!): 3
@@ -210,15 +210,20 @@ export function parse(
       innerText = code.slice(i + 1, endIndex);
       i = endIndex;
     } else {
-      // If the string isn't multiline, it could still have some text!
-      const until = code.indexOf('\n', i);
+      // If the string isn't multiline, it could still have some text right after the tag
+
+      // Take the innerText
+      let until = code.indexOf('\n', i);
+      until = until == -1 ? code.length : until;
       innerText = code.slice(i + 1, until);
       i = until;
 
-      // If it's not multline, it can always have children!
-      const [elements, finishI] = parse(code, compileOptions, indent + 1, i, variables);
-      children.push(...elements);
-      i = finishI;
+      if (until != code.length) {
+        // After the innerText, tags may have children
+        const [elements, finishI] = parse(code, compileOptions, indent + 1, i, variables);
+        children.push(...elements);
+        i = finishI;
+      }
     }
 
     // Finally, push the element!
@@ -226,9 +231,11 @@ export function parse(
       tagName, attrs,
       file: compileOptions.filePath,
       clss: things
-        .filter(t => t[0] == '.' && t.length > 1).map(c => c.slice(1)),
+        .filter(t => t[0] == '.' && t.length > 1)
+        .map(c => c.slice(1)),
       id: things.filter(t => t[0] == '#')[0]?.slice(1),
-      innerText, children,
+      innerText,
+      children,
       notMarkDown: tagNoMarkDown.includes(tagName),
       singleTag: tagSingle.includes(tagName),
       multiline: isMultiline
@@ -236,5 +243,5 @@ export function parse(
     tagName = '';
     tagIndent = 0;
   }
-  return [els, i];
+  return [ els, i ];
 }
