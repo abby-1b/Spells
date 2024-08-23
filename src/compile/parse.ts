@@ -78,7 +78,7 @@ export function parse(
   startI = 0,
   parentVariables?: Record<string, string>,
 ): [ Element[], number ] {
-  // Properly indent the code
+  // Properly indent the code (using tabs)
   if (!code.includes('\t')) {
     // Get the indent size
     let indentSize = 4; // Default to 4

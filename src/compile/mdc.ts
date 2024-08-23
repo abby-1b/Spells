@@ -1,12 +1,8 @@
-// So this is a file I made a few years back to parse markdown into HTML. It's
-// quick and dirty, absolutely inefficient, but it works for now. If there are
-// more speed concerns later on in the project, this is a very good place to
-// start looking for potential optimizations.
 
 /**
  * Convert MarkDown to HTML
  * @param md Provided MarkDown
- * @returns The converted HTML string
+ * @returns The resulting HTML string
  */
 export function markDownToHtml(md: string): string {
   return md
@@ -38,7 +34,11 @@ export function markDownToHtml(md: string): string {
   
   // Monospace (`like this`)
     .replace(/`[^`]{1,}`(?!`)/gm, e => '<code>' + e.slice(1, -1) + '</code>')
-    .replace(/```(.|\n)*?```/gm, e => '<br><code>' + e.slice(3, -3).replace(/\n/g, '<br>') + '</code>')
+    .replace(/```(.|\n)*?```/gm, e => {
+      let firstCut = e.indexOf('\n');
+      if (firstCut == -1) { firstCut = 2; }
+      return '<br><code>' + e.slice(firstCut + 1, -3).replace(/\n/g, '<br>') + '</code>';
+    })
 
   // Superscript (x^this_is_sup)
     .replace(/\^.+?(?=\s|$)/g, e => '<sup>' + e.slice(1) + '</sup>')
@@ -55,4 +55,13 @@ export function markDownToHtml(md: string): string {
   
   // Images
     .replace(/%\(.*?\)%/gm, e => `<img src="./${e.slice(2, -2)}" style='width:100%'>`);
+}
+
+const test = `
+          # Some header
+          Hello, World!
+`;
+
+if (import.meta.main) {
+  console.log(markDownToHtml(test));
 }
