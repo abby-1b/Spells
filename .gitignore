@@ -4,3 +4,7 @@
 **/.DS_Store
 test/free-test.ts
 **/node_modules
+spells/Cargo.lock
+spells/target/**
+deno.lock
+src-old
