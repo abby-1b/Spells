@@ -8,9 +8,14 @@ import { pathGoUp, readTextFile, readTextFileSync } from './path.ts';
  * The compiler version (1st) changes when there's any API breaking changes.
  * The 'build' number (2nd) changes whenever anything new is added.
  */
-export const VERSION =
-  readTextFileSync(pathGoUp(new URL(import.meta.url).pathname) + 'VERSION')
-    .trim();
+export const VERSION = (() => {
+  try {
+    return readTextFileSync(pathGoUp(new URL(import.meta.url).pathname) + 'VERSION')
+      .trim();
+  } catch {;}
+
+  return "[unknown]";
+})();
 
 const COMMANDS: { [key: string]: string[] } = {
   'help, h, (empty)': [ 'Shows this dialogue' ],
