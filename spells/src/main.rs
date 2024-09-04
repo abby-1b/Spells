@@ -19,7 +19,7 @@ static HELP_DIALOGUE: &[[&str; 3]] = &[
   [
     "build, b", "buildDir outDir [--final]",
     concat!(
-      "Builds the site to HTML and JS",
+      "Builds the site to HTML and JS\n",
       "final (optional): minifies files and removes source maps"
     )
   ]
@@ -95,13 +95,21 @@ fn unknown_command(command: &String) {
       min_dist = result.2;
     }
   }
+
+  if min_dist > 800 {
+    // No good match found
+    println!("Command `{}` not found.", command);
+    print_help_dialogue();
+  } else {
+    // A decent match was found
+    println!(
+      "Command `{}` not found. Did you mean `{}`?",
+      command,
+      all_commands[min_idx].0,
+    );
+    print_help_dialogue_part(all_commands[min_idx].1);
+  }
   
-  println!(
-    "Command `{}` not found. Did you mean `{}`?",
-    command,
-    all_commands[min_idx].0,
-  );
-  print_help_dialogue_part(all_commands[min_idx].1);
 }
 
 fn print_help_dialogue() {
