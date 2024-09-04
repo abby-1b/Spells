@@ -5,3 +5,9 @@ edition = "2021"
 
 [dependencies]
 tiny_http = "0.11"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
