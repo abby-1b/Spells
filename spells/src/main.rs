@@ -1,7 +1,10 @@
+use std::{env, path::Path};
+
 use cli_error::throw_cli_error;
 
 mod cli_error;
-mod compiler;
+mod compile;
+
 mod server;
 
 static HELP_DIALOGUE: &[[&str; 3]] = &[
@@ -43,7 +46,7 @@ fn main() {
         .map_err(|err| throw_cli_error(err));
     },
     "build" | "b" => {
-      let _ = compiler::build()
+      let _ = compile::compiler::build(env::current_dir().unwrap().as_path())
         .map_err(|err| throw_cli_error(err));
     },
     _ => unknown_command(command)

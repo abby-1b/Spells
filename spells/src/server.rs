@@ -1,7 +1,7 @@
 
 use std::{env, fs, path::{Path, PathBuf}, str::FromStr};
 
-use crate::{cli_error::CliError, server};
+use crate::{cli_error::CliError, compile, server};
 
 pub enum ServerError {
   BadArguments { message: String }
@@ -205,6 +205,7 @@ fn file_response(path: &Path) -> Response {
     todo!()
   } else if extension == "spl" {
     // Compile Spells
+    compile::compiler::build(path);
     todo!()
   } else {
     Response {
