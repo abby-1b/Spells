@@ -108,15 +108,11 @@ impl<'a> Tokenizer<'a> {
 
     // Get the line start
     let start_idx = if let Some(held_token) = self.held_token {
+      self.held_token = None;
       held_token.as_ptr() as usize - self.file_string.as_ptr() as usize
     } else {
       self.char_idx
     };
-
-    dbg!(
-      &self.file_string[self.char_idx..self.char_idx + 10],
-      &self.file_string[start_idx..start_idx + 10],
-    );
 
     // Get the line end
     while self.char_peek().is_some_and(|c| c != '\n') {

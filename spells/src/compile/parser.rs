@@ -2,8 +2,27 @@ use std::collections::HashSet;
 
 use super::{error::CompilerError, tokenizer::{Indent, Tokenizer}};
 
+static IMPORT_TAGS: &[&str] = &[
+  "@import",
+  "@imports",
+  "@require",
+  "@requires",
+  "@include",
+  "@includes",
+  "@need",
+  "@needs",
+  "@want",
+  "@wants",
+  "@desire",
+  "@desires",
+  "@necessitate",
+  "@necessitates",
+  "@steal-code-from",
+  "@steals-code-from",
+];
+
 #[derive(Debug, Clone)]
-enum ElementContent {
+pub enum ElementContent {
   Empty,
   Children(Vec<Element>),
   InnerText(String)
@@ -12,11 +31,11 @@ enum ElementContent {
 /// A spells element references 
 #[derive(Debug, Clone)]
 pub struct Element {
-  tag_name: String,
-  id: Option<String>,
-  classes: Vec<String>,
-  attributes: Vec<(String, Option<String>)>,
-  content: ElementContent,
+  pub tag_name: String,
+  pub id: Option<String>,
+  pub classes: Vec<String>,
+  pub attributes: Vec<(String, Option<String>)>,
+  pub content: ElementContent,
 }
 
 /// A frame of the parser, used for keeping components in scope
@@ -253,25 +272,42 @@ impl Parser {
 fn hydrate_component(mut instance: Element, template: &Element) -> Element {
   // Add the component name to the classes
   instance.classes.push(instance.tag_name);
-  
+
   Element {
     tag_name: "div".to_owned(),
     id: instance.id.or_else(|| template.id.clone()),
-    classes: pack_vec(combine_vecs(&instance.classes, &template.classes)),
-    attributes: pack_vec(combine_vecs(&instance.attributes, &template.attributes)),
+    classes: pack_vec(combine_vecs(&instance.classes, &template.classes, |a| a)),
+    attributes: pack_vec(combine_vecs(&instance.attributes, &template.attributes, |e| &e.0)),
     content: template.content.clone(),
   }
 }
 
 fn combine_vecs<
-  T: std::clone::Clone + std::hash::Hash + std::cmp::Eq
->(a: &Vec<T>, b: &Vec<T>) -> Vec<T> {
+  T: Eq + std::hash::Hash + Clone
+>(
+  a: &Vec<T>,
+  b: &Vec<T>,
+  f: impl Fn(&T) -> &String
+) -> Vec<T> {
   let mut hashset: HashSet<T> = HashSet::with_capacity(a.len() + b.len());
   for e in a.iter().chain(b) { hashset.insert(e.clone()); }
 
-  hashset
+  let mut ret = hashset
     .into_iter()
-    .collect::<Vec<T>>()
+    .collect::<Vec<T>>();
+
+  ret.sort_by(|a, b| {
+    let a = f(a);
+    let b = f(b);
+
+    if a.len() != b.len() {
+      a.len().cmp(&b.len())
+    } else {
+      a.cmp(b)
+    }
+  });
+
+  ret
 }
 
 fn pack_vec<T>(v: Vec<T>) -> Vec<T> {

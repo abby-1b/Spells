@@ -1,6 +1,7 @@
-use std::{env, path::Path};
+use std::env;
 
 use cli_error::throw_cli_error;
+use compile::options::CompileOptions;
 
 mod cli_error;
 mod compile;
@@ -46,8 +47,12 @@ fn main() {
         .map_err(|err| throw_cli_error(err));
     },
     "build" | "b" => {
-      let _ = compile::compiler::build(env::current_dir().unwrap().as_path())
-        .map_err(|err| throw_cli_error(err));
+      let _ = compile::compiler::build_all(
+        CompileOptions {
+          pretty: true,
+        },
+        env::current_dir().unwrap().as_path()
+      ).map_err(|err| throw_cli_error(err));
     },
     _ => unknown_command(command)
   }

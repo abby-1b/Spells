@@ -1,5 +1,8 @@
 
 pub mod error;
 pub mod compiler;
-mod parser;
+pub mod options;
 mod tokenizer;
+mod parser;
+mod filter;
+mod emitter;
