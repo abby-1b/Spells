@@ -2,19 +2,14 @@
 
 # **Spells**: A fast web development server
 
-Spells is a tool that allows for quick iteration and development of web
-applications. It allows you to write a combination of JavaScript, TypeScript,
-HTML, Markdown, and Pug/Jade to develop websites much faster.
+Spells is a tool that allows for quick iteration and development of web applications. It allows you to write a combination of JavaScript, TypeScript, HTML, Markdown, and Pug/Jade to develop websites much faster.
 
-Spells' main feature is its web server. It allows you to write in all of these
-languages and quickly test everything in real time. To run the web server,
-simply run `spl s` (faster than writing `python3 -m http.server`, huh?)
+Spells' main feature is its web server. It allows you to write in all of these languages and quickly test everything in real time. To run the web server, simply run `spl s` (faster than writing `python3 -m http.server`, huh?)
 
 
 # Install
 
-To install Spells, follow the instructions [here](./INSTALL.md). Windows is
-currently unsupported, but support is planned.
+To install Spells, follow the instructions [here](./INSTALL.md). Windows is currently unsupported, but support is planned.
 
 
 # Design
@@ -23,15 +18,12 @@ currently unsupported, but support is planned.
 
 Spells (the tool) comes with its own own language: Spells (the markup language).
 
-It's a subset of Pug/Jade, a language similar to VSCode's Emmet abbreviations.
-This greatly reduces the amount of code typed and overall looks less cluttered
-than pure HTML:
+It's a subset of Pug/Jade, a language similar to VSCode's Emmet abbreviations. This greatly reduces the amount of code typed and overall looks less cluttered than pure HTML:
 
 ```jade
 head
   title My Website!
-  script(src="someScript.js")
-body
+  script(src="someScript.js") body
   h1 This content is in one line...
   h2.
     This content can span
@@ -41,9 +33,7 @@ body
 
 ## TypeScript
 
-The main design goal of this tool is to allow mixing different languages within
-the same project. You can, for example, put TypeScript inside your HTML script
-tags, which compiles down to its JavaScript equivalent:
+The main design goal of this tool is to allow mixing different languages within the same project. You can, for example, put TypeScript inside your HTML script tags, which compiles down to its JavaScript equivalent:
 
 ```jade
 script.
@@ -66,15 +56,12 @@ script(src="someFile.ts")
 const a: number = 123;
 ```
 
-This currently uses [Speedy Web Compiler](https://swc.rs/), a fast TypeScript
-compiler written in Rust. Optionally, there's support for my own compiler,
+This currently uses [Speedy Web Compiler](https://swc.rs/), a fast TypeScript compiler written in Rust. Optionally, there's support for my own compiler,
 [RSTSC](https://github.com/abby-1b/rstsc).
 
 ## Markdown
 
-Markdown provides a simple way of styling text. When writing text in Spells, you
-can include markdown at any point, and it will be converted to its equivalent
-HTML when it's compiled:
+Markdown provides a simple way of styling text. When writing text in Spells, you can include markdown at any point, and it will be converted to its equivalent HTML when it's compiled:
 
 ```jade
 h1.
@@ -85,5 +72,4 @@ Which looks like the following:
 
 You can *italicize* words, make them **bold**, or ***both***.
 
-Do keep in mind that this is a subset of the [Markdown spec](https://spec-md.com/).
-
+This uses the [markdown-rs](https://github.com/wooorm/markdown-rs/blob/main/license) compiler internally.
