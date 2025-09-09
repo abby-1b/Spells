@@ -5,7 +5,7 @@ use super::{
 };
 
 pub fn build_all(options: CompileOptions, directory: &Path) -> Result<(), CompilerError> {
-  Ok(())
+  todo!("Implement build_all to compile all files in a directory");
 }
 
 pub fn build_file(options: CompileOptions, file_path: &Path) -> Result<String, CompilerError> {
@@ -18,10 +18,15 @@ pub fn build_source_string(options: CompileOptions, source: String) -> Result<St
 
   let mut parser = Parser::new();
   let elements = parser.parse(&mut tokenizer)?;
-  dbg!(&elements);
+
+  let expected_capacity = source.len();
 
   let mut emitter = Emitter::new(options);
-  let out = emitter.emit(elements);
+  let out = emitter.emit(expected_capacity, elements);
+
+  println!("Source len: {}", source.len());
+  println!("Expect len: {}", expected_capacity);
+  println!("Output len: {}", out.len());
 
   Ok(out)
 }

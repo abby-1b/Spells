@@ -1,6 +1,6 @@
 use std::iter;
 
-use super::{options::CompileOptions, parser::{Element, ElementContent}, tokenizer::Indent};
+use super::{markdown::compile_markdown, options::CompileOptions, parser::{Element, ElementContent}, tokenizer::Indent};
 
 static INDENT_AMOUNT: Indent = 2;
 static UNCLOSED_TAGS: &[&str] = &[
@@ -8,11 +8,13 @@ static UNCLOSED_TAGS: &[&str] = &[
   "img",
   "meta",
   "wbr",
+  "link"
 ];
 static NO_MARKDOWN: &[&str] = &[
   "style",
   "css",
   "script",
+  "title",
 ];
 
 pub struct Emitter {
@@ -26,8 +28,9 @@ impl Emitter {
     }
   }
 
-  pub fn emit(&mut self, elements: Vec<Element>) -> String {
-    let mut out_string = "<!DOCTYPE html>\n".to_owned();
+  pub fn emit(&mut self, expected_capacity: usize, elements: Vec<Element>) -> String {
+    let mut out_string = String::with_capacity(expected_capacity);
+    out_string += "<!DOCTYPE html>\n";
     let mut element_stack = vec![];
     self.emit_inner(&mut out_string, &mut element_stack, &elements, 0);
     out_string
@@ -137,7 +140,7 @@ impl Emitter {
     indent: Indent,
     element_stack: &mut Vec<&Element>,
   ) {
-    *out_string += &md;
+    *out_string += &compile_markdown(md, indent);
     *out_string += "\n";
   }
 

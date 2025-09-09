@@ -13,8 +13,8 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
   pub fn new(
-    file_string: &str,
-  ) -> Tokenizer {
+    file_string: &'a str,
+  ) -> Tokenizer<'a> {
 
     let char_iter = file_string
       .chars()
@@ -229,5 +229,17 @@ impl<'a> Tokenizer<'a> {
   fn char_consume_and_peek(&mut self) -> Option<char> {
     self.char_consume();
     self.char_peek()
+  }
+}
+
+
+#[test]
+fn test() {
+  let mut t = Tokenizer::new("meta(
+  property=\"og:description\",
+  content=\"A half-decent amalgamation of languages that's... pretty fast.\"
+)");
+  while t.peek_ignore_newline().is_some() {
+    dbg!(t.consume_ignore_newline());
   }
 }

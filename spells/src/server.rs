@@ -1,7 +1,8 @@
 
+// use rstsc;
 use std::{env, fs, path::{Path, PathBuf}, str::FromStr};
+use crate::{cli_error::CliError, compile::{self, options::CompileOptions}};
 
-use crate::{cli_error::CliError, compile::{self, options::CompileOptions}, server};
 
 pub enum ServerError {
   BadArguments { message: String }
@@ -19,7 +20,7 @@ impl CliError for ServerError {
 pub struct Request<'a> {
   /// The entire URL (not including the scheme nor server address)
   url: &'a str,
-  
+
   /// Whether or not the scheme is HTTPS
   secure: bool,
 
@@ -32,12 +33,17 @@ pub struct Request<'a> {
   params: Vec<(&'a str, Option<&'a str>)>,
 }
 
+pub enum ResponseData {
+  Text(String),
+  Binary(Vec<u8>)
+}
+
 pub struct Response {
   /// The HTTP response status code (https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
   status: u16,
 
   /// The response body
-  body: String,
+  body: ResponseData,
 
   /// The `Content-Type` header
   content_type: (&'static str, &'static str),
@@ -66,7 +72,9 @@ pub fn start(args: &[String]) -> Result<(), ServerError> {
       options.address,
       options.port
     );
-    if !options.silent { println!("Server running at http://{}/", full_address); }
+    if !options.silent {
+      println!("Server running at http://{}/", full_address);
+    }
     tiny_http::Server::http(full_address).unwrap()
   };
 
@@ -108,20 +116,28 @@ pub fn start(args: &[String]) -> Result<(), ServerError> {
       .map(|route| (route.routing_fn)(&spells_request))
       .unwrap_or_else(|| default_request_handler(&spells_request));
 
+    println!(" > {}", response.status);
+
     // Convert our custom response into a tiny_http response
-    let data_length = Some(response.body.len());
+    let data_length = Some(match &response.body {
+      ResponseData::Text(text) => text.len(),
+      ResponseData::Binary(bin) => bin.len()
+    });
     let content_type_string = format!(
       "Content-Type:{}/{}", response.content_type.0, response.content_type.1
     );
     let final_response = tiny_http::Response::new(
       tiny_http::StatusCode(response.status),
       vec![ tiny_http::Header::from_str(&content_type_string).unwrap() ],
-      std::io::Cursor::new(response.body),
+      std::io::Cursor::new(match response.body {
+        ResponseData::Text(text) => text.into_bytes(),
+        ResponseData::Binary(bin) => bin
+      }),
       data_length,
       None
     );
 
-    // Pass the respond to tiny_http
+    // Pass the response to tiny_http
     if let Err(error) = request.respond(final_response) {
       if !options.silent {
         println!("Error when sending response: {}", error.to_string());
@@ -146,7 +162,7 @@ fn default_request_handler(request: &Request) -> Response {
   } else {
     Response {
       status: 404,
-      body: "404: Resource not found!".to_owned(),
+      body: ResponseData::Text("404: Resource not found!".to_owned()),
       content_type: ("text", "plain")
     }
   }
@@ -186,44 +202,54 @@ fn handle_path(path: &PathBuf, server_path_len: usize) -> Response {
   );
   
   return Response {
-    status: 200,
-    body: format!(
+    status: 404,
+    body: ResponseData::Text(format!(
       "<style>html{{background-color:white;filter:invert(1)}}*{{font-family:monospace;margin-bottom:0}}a{{color:#0d4500}}</style><h1 style=\"margin-top:20px\">Directory listing of {}</h1><br>\n{}",
       path.as_path().display().to_string().split_off(server_path_len),
       a_tags.join("")
-    ),
+    )),
     content_type: ("text", "html")
   };
 }
 
 fn file_response(path: &Path) -> Response {
+  println!("file_response for: {:?}", path);
   let extension_string = path.display().to_string().to_lowercase();
   let extension = extension_string.split(".").last().unwrap_or("");
 
-  if extension == "ts" {
+  match extension {
     // Compile TypeScript
-    todo!()
-  } else if extension == "spl" {
+    "ts" => match rstsc::compile(&fs::read_to_string(path).unwrap()) {
+      Ok(out) => Response {
+        status: 200,
+        body: ResponseData::Text(out),
+        content_type: ("text", "javascript")
+      },
+      Err(error) => Response {
+        status: 404,
+        body: ResponseData::Text(error.message),
+        content_type: ("text", "plain")
+      }
+    } 
     // Compile Spells
-    match compile::compiler::build_file(
+    "spl" => match compile::compiler::build_file(
       CompileOptions { pretty: false },
       path
     ) {
       Ok(out) => Response {
         status: 200,
-        body: out,
+        body: ResponseData::Text(out),
         content_type: ("text", "html")
       },
       Err(error) => Response {
         status: 404,
-        body: error.string(),
+        body: ResponseData::Text(error.string()),
         content_type: ("text", "plain")
       }
     }
-  } else {
-    Response {
+    _ => Response {
       status: 200,
-      body: fs::read_to_string(path).unwrap(),
+      body: ResponseData::Binary(fs::read(path).unwrap()),
       content_type: get_content_type_from_extension(extension)
     }
   }

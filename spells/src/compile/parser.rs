@@ -193,6 +193,10 @@ impl Parser {
           // Attributes
           tokenizer.consume_ignore_newline();
           while !matches!(tokenizer.peek_ignore_newline(), Some(")")) {
+            if matches!(tokenizer.peek_ignore_newline(), Some(" ")) {
+              tokenizer.consume();
+              continue;
+            }
             let name = match tokenizer.consume_ignore_newline() {
               Some(name) => name.to_owned(),
               None => break
@@ -227,6 +231,29 @@ impl Parser {
       let inner_elements = self.inner_parse(tokenizer, inner_indent)?;
       if !inner_elements.is_empty() {
         content = ElementContent::Children(inner_elements);
+      }
+    }
+
+    // `style(src="...")` imports
+    if tag_name == "style" {
+      let has_src_attribute = attributes
+        .iter().any(|(name, _)| name == "src");
+      if has_src_attribute {
+        return Ok(ElementReturn::Element(Element {
+          tag_name: "link".to_owned(),
+          id: None,
+          classes: vec![],
+          attributes: vec![
+            ("rel".to_owned(), Some("stylesheet".to_owned())),
+            (
+              "href".to_owned(),
+              attributes.iter()
+                .find(|(name, _)| name == "src")
+                .and_then(|(_, value)| value.clone())
+            )
+          ],
+          content: ElementContent::Empty
+        }));
       }
     }
 
