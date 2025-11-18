@@ -8,7 +8,7 @@ pub enum ServerError {
   BadArguments { message: String }
 }
 impl CliError for ServerError {
-  fn string(&self) -> String {
+  fn string(self) -> String {
     match self {
       Self::BadArguments { message } => {
         format!("BadArguments: {}", message)
@@ -155,23 +155,33 @@ fn default_request_handler(request: &Request) -> Response {
 
   if path.is_dir() {
     // It's a path!
-    handle_path(&path, server_path_len)
-  } else if path.exists() {
+    return handle_dir_path(&path, server_path_len)
+  }
+  
+  if path.exists() {
     // Return the resource directly
-    file_response(&path)
-  } else {
-    Response {
-      status: 404,
-      body: ResponseData::Text("404: Resource not found!".to_owned()),
-      content_type: ("text", "plain")
-    }
+    return file_response(&path)
   }
 
+  if path.with_extension("js").exists() {
+    // Try to find a JavaScript file
+    return file_response(&path.with_extension("js"))
+  }
+  if path.with_extension("ts").exists() {
+    // Try to find a TypeScript file
+    return file_response(&path.with_extension("ts"))
+  }
+
+  // 404 (fallback)
+  Response {
+    status: 404,
+    body: ResponseData::Text("404: Resource not found!".to_owned()),
+    content_type: ("text", "plain")
+  }
 }
 
-fn handle_path(path: &PathBuf, server_path_len: usize) -> Response {
+fn handle_dir_path(path: &PathBuf, server_path_len: usize) -> Response {
   // Try to find an index file
-
   let index_spl = path.join("index.spl");
   if index_spl.exists() {
     return file_response(&index_spl);
@@ -179,18 +189,16 @@ fn handle_path(path: &PathBuf, server_path_len: usize) -> Response {
   
   let index_html = path.join("index.html");
   if index_html.exists() {
-    return file_response(&index_spl);
+    return file_response(&index_html);
   }
   
   // No index file, try returning the directory listing
   let mut a_tags: Vec<String> = vec![];
-
   let path_len = path.display().to_string().len() - server_path_len;
   if path_len > 1 {
     // Not root, add a link to go back
     a_tags.push("<a href=\"../\">..</a><br>".to_string());
   }
-
   // Add
   a_tags.extend(
     fs::read_dir(&path).unwrap()
@@ -200,7 +208,6 @@ fn handle_path(path: &PathBuf, server_path_len: usize) -> Response {
       path, path
     ))
   );
-  
   return Response {
     status: 404,
     body: ResponseData::Text(format!(
@@ -213,9 +220,10 @@ fn handle_path(path: &PathBuf, server_path_len: usize) -> Response {
 }
 
 fn file_response(path: &Path) -> Response {
-  println!("file_response for: {:?}", path);
   let extension_string = path.display().to_string().to_lowercase();
   let extension = extension_string.split(".").last().unwrap_or("");
+
+  println!("File: {} Ext: {}", path.display(), extension);
 
   match extension {
     // Compile TypeScript
@@ -227,13 +235,13 @@ fn file_response(path: &Path) -> Response {
       },
       Err(error) => Response {
         status: 404,
-        body: ResponseData::Text(error.message),
+        body: ResponseData::Text(error.as_str().to_owned()),
         content_type: ("text", "plain")
       }
     } 
     // Compile Spells
     "spl" => match compile::compiler::build_file(
-      CompileOptions { pretty: false },
+      &CompileOptions { pretty: false },
       path
     ) {
       Ok(out) => Response {

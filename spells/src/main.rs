@@ -1,7 +1,9 @@
-use std::env;
+use std::{env, path::Path};
 
 use cli_error::throw_cli_error;
 use compile::options::CompileOptions;
+
+use crate::cli_error::CliArgError;
 
 mod cli_error;
 mod compile;
@@ -29,6 +31,12 @@ static HELP_DIALOGUE: &[[&str; 3]] = &[
   ]
 ];
 
+#[test]
+fn test_server() {
+  let _ = server::start(&["8080".to_string()],)
+    .map_err(|err| throw_cli_error(err));
+}
+
 fn main() {
   let args: Vec<String> = std::env::args().collect();
 
@@ -47,11 +55,21 @@ fn main() {
         .map_err(|err| throw_cli_error(err));
     },
     "build" | "b" => {
+      if args.len() < 4 {
+        println!("Usage:");
+        print_help_dialogue_part(3);
+        throw_cli_error(CliArgError::new(
+          "Please provide an input and output directory.".to_owned()
+        ));
+      }
+      let build_dir = &args[2];
+      let out_dir = &args[3];
       let _ = compile::compiler::build_all(
-        CompileOptions {
+        &CompileOptions {
           pretty: true,
         },
-        env::current_dir().unwrap().as_path()
+        Path::new(build_dir),
+        Path::new(out_dir)
       ).map_err(|err| throw_cli_error(err));
     },
     _ => unknown_command(command)

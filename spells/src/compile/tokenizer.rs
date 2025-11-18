@@ -2,6 +2,7 @@ use std::{iter::Peekable, str::Chars};
 
 pub type Indent = u16;
 
+#[derive(Debug)]
 pub struct Tokenizer<'a> {
   file_string: &'a str,
   char_iter: Peekable<Chars<'a>>,

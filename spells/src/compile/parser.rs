@@ -38,6 +38,17 @@ pub struct Element {
   pub content: ElementContent,
 }
 
+impl Element {
+  pub fn has_attribute(&self, name: &str) -> bool {
+    for a in &self.attributes {
+      if a.0 == name {
+        return true;
+      }
+    }
+    false
+  }
+}
+
 /// A frame of the parser, used for keeping components in scope
 struct Frame {
   components: Vec<Element>,
@@ -69,7 +80,7 @@ impl Parser {
     // Get the starting indentation
     let start_indent = tokenizer.consume_indent().0;
     if start_indent != 0 {
-      return Err(CompilerError::IndentationError(format!(
+      return Err(CompilerError::Indentation(format!(
         "Expected 0 indentation in start of file, found {}.",
         start_indent
       )));
@@ -152,13 +163,13 @@ impl Parser {
           } else {
             // Multiline
             content_parsed = true;
-            if tokenizer.peek_indent().0 < indent {
+            if tokenizer.peek_indent().0 <= indent {
               // No content
               break;
             }
 
-            let mut inner_text = "".to_owned();
-            let normal_indent = tokenizer.consume_indent().0;
+            let mut inner_text = "".to_owned(); // buffer that's written to
+            let normal_indent = tokenizer.consume_indent().0; // the indentation of the text
 
             loop {
               // Get a single line
@@ -170,6 +181,8 @@ impl Parser {
               // Get the next indent
               let next_indent = tokenizer.peek_indent();
               if next_indent.0 <= indent {
+                // println!("{:?}", next_indent);
+                // println!("Breaking out of multiline...");
                 break;
               }
 
@@ -181,7 +194,7 @@ impl Parser {
             }
 
             // Get the remaining indent
-            tokenizer.consume_indent();
+            // tokenizer.consume_indent();
             tokenizer.peek_indent();
 
             content = ElementContent::InnerText(inner_text);

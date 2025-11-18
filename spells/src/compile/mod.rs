@@ -2,8 +2,8 @@
 pub mod error;
 pub mod compiler;
 pub mod options;
-mod markdown;
-mod tokenizer;
-mod parser;
-mod filter;
-mod emitter;
+pub mod markdown;
+pub mod tokenizer;
+pub mod parser;
+pub mod filter;
+pub mod emitter;
